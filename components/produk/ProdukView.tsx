@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import s from "./produk.module.css";
@@ -85,6 +85,7 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
   const [op, setOp] = useState(Object.keys(c.ops)[0]);
   const [selIdx, setSelIdx] = useState<number | null>(null);
   const [num, setNum] = useState("");
+  const numRef = useRef<HTMLInputElement>(null);
 
   const items = c.ops[op];
   const sel: { n: string; p: number; i: number; v?: number } | null = c.bill
@@ -96,6 +97,15 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
   const sp = sel ? (c.bill ? op : op + " " + sel.n) : "-";
   const sh = sel ? (sel.p ? rp(sel.p) : "Dicek otomatis") : "-";
   const stt = sel && sel.p ? rp(sel.p + 1500) : c.bill && sel ? "Dicek otomatis" : "Rp 0";
+
+  function pilihNominal(i: number) {
+    setSelIdx(i);
+    if (typeof window === "undefined" || !window.matchMedia("(max-width: 900px)").matches) return;
+    const el = numRef.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "center" }));
+  }
 
   function go() {
     if (!sel) return alert("Pilih produk dulu ya");
@@ -197,7 +207,7 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
                       <div
                         key={i}
                         className={`${s.it} ${sel && sel.i == i ? s.on : ""}`}
-                        onClick={() => setSelIdx(i)}
+                        onClick={() => pilihNominal(i)}
                       >
                         {i == 1 ? <span className={s.hot}>TERLARIS</span> : null}
                         <b>{x.n}</b>
@@ -208,6 +218,58 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+            <div className={`${s.card} ${s.mobilePay}`}>
+              <h2>Ringkasan</h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  go();
+                }}
+              >
+                <label htmlFor="nomor" style={{ fontSize: 13, fontWeight: 600 }}>
+                  {c.nl}
+                </label>
+                <input
+                  id="nomor"
+                  ref={numRef}
+                  inputMode="numeric"
+                  enterKeyHint="go"
+                  placeholder={c.ph}
+                  value={num}
+                  onChange={(e) => setNum(e.target.value)}
+                />
+                <div className={s.li}>
+                  <span>Produk</span>
+                  <b>{sp}</b>
+                </div>
+                <div className={s.li}>
+                  <span>Harga</span>
+                  <b>{sh}</b>
+                </div>
+                <div className={s.li}>
+                  <span>Biaya admin</span>
+                  <b>Rp 1.500</b>
+                </div>
+                <div className={s.tot}>
+                  <span>Total</span>
+                  <b>{stt}</b>
+                </div>
+                <button className={`${s.btn} ${s.full}`} type="submit">
+                  Lanjut Bayar →
+                </button>
+              </form>
+              <div className={s.feat}>
+                <span>
+                  <Ic n="clock" /> Proses otomatis 24 jam
+                </span>
+                <span>
+                  <Ic n="shield" /> Transaksi aman &amp; terenkripsi
+                </span>
+                <span>
+                  <Ic n="check" /> Garansi uang kembali jika gagal
+                </span>
               </div>
             </div>
             <div className={s.card}>
@@ -280,16 +342,6 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
           Cek status transaksi
         </Link>
       </footer>
-
-      <div className={s.bar}>
-        <div className={s.barInfo}>
-          <small>Total</small>
-          <b>{stt}</b>
-        </div>
-        <button className={s.btn} onClick={go}>
-          Lanjut Bayar →
-        </button>
-      </div>
     </div>
   );
 }
