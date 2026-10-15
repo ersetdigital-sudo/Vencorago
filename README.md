@@ -78,6 +78,39 @@ Cara cepat cek desktop masih utuh: bandingkan sidik jari DOM (posisi, ukuran, fo
 font-size, weight, warna teks, background tiap elemen) versi Next dengan `original/`. Hasilnya harus
 nol selain elemen internal Next sendiri (wrapper 0×0 dan `<next-route-announcer>`).
 
+## Admin dashboard
+
+Route `/admin` — console operasional untuk memantau performa transaksi.
+
+Halaman: `/admin` (ringkasan, KPI, grafik 7/14/30 hari), `/admin/transaksi` (ledger + filter status +
+pencarian + paginasi + detail baris), `/admin/pelanggan` (agregat per nomor tujuan), `/admin/produk`
+(per kategori, produk, metode bayar). Setiap halaman punya ekspor CSV.
+
+**Sumber datanya.** Proyek ini belum punya backend: transaksi ditulis client-side ke
+`localStorage.vcr_tx`. Dashboard jadi menampilkan transaksi asli perangkat ini digabung dataset demo
+deterministik (seed tetap, jadi angkanya stabil), dan bagian demo dilabeli jelas di UI. Angka di
+dashboard bukan data bisnis nyata sampai ada API + database.
+
+**Desainnya diambil dari NeedMCP**, bukan dikarang sendiri:
+
+- **Struktur** — DNA `ablepro-dna`: sidebar rail 58px + panel 190px dengan satu baris aktif, sticky
+  utility strip (breadcrumb + search + bell + cluster akun), kanvas kartu rata (max 1600px, padding
+  24, gap 24/16/12), KPI unit, ledger table, segmented period toggle, linear progress track. Di
+  mobile shell-nya runtuh jadi bottom bar dengan item, urutan, dan active state yang sama.
+- **Kulit** — style premium `amber-atrium`: dark-first espresso void `#14100C`, aksen amber
+  `#E8A54B`, panel kaca (blur 24px), Outfit untuk UI + JetBrains Mono untuk angka/ID, radius
+  6/10/12/16, elevation level-1, glow hanya di elemen aktif.
+- Semua tokennya di-scope di `.admin` (`components/admin/admin.module.css`), jadi situs publik tidak
+  tersentuh — sudah diverifikasi ulang dengan sidik jari DOM setelah pengerjaan admin.
+- Konflik aturan yang diselesaikan sadar: radius kartu 16px + padding 20px (Style pegang nilai
+  token, DNA pegang rhythm); glass/blur dari style memang wajib walau craft floor biasanya menolak
+  blur dekoratif; scrollbar sengaja **tidak** di-custom karena playbook `operate` menolak
+  reinvent affordance standar (text selection + focus ring tetap diwarnai dari palet).
+- State NeedMCP disimpan di `.needmcp/state.json` supaya sesi berikutnya memakai DNA/style yang sama.
+
+**Belum ada auth.** `/admin` masih terbuka untuk umum (hanya diberi `robots: noindex`). Jangan
+deploy ke publik sebelum diberi proteksi: middleware + login, atau basic auth di level platform.
+
 ## Catatan penting supaya tampilan tetap sama persis (desktop)
 
 Hal-hal berikut **bukan** pilihan gaya, tapi syarat agar rendering sama dengan versi asli —

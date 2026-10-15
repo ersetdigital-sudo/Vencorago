@@ -63,6 +63,9 @@ const TABS = [
 export default function MobileTabBar() {
   const pathname = usePathname();
 
+  // the admin area has its own navigation shell
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <nav className={s.bar} aria-label="Navigasi utama">
       {TABS.map((t) => {
