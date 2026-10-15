@@ -62,8 +62,13 @@ desktop tidak tersentuh:
   auto-zoom saat fokus dan layout jadi geser. `maximum-scale=1` sengaja **tidak** dipakai karena
   mematikan pinch-to-zoom untuk semua orang.
 - **Alur dirapikan** — di beranda panel transaksi dinaikkan ke atas daftar kategori
-  (`aside { order: -1 }`) supaya CTA-nya tidak terkubur; di halaman Produk ada bar sticky berisi
-  total + "Lanjut Bayar" di area jempol.
+  (`aside { order: -1 }`) supaya CTA-nya tidak terkubur. Di halaman Produk, field nomor ditaruh
+  paling atas ("Nomor Tujuan") sebelum pilihan operator/nominal, ringkasan (Produk/Harga/Biaya
+  admin/Total) di bawah picker, lalu bar sticky berisi total + "Lanjut Bayar" di area jempol —
+  ini satu-satunya tombol CTA yang kelihatan di mobile.
+- **Ikon** — `app/icon.svg` (brand mark: kotak teal gradien + huruf V + titik emas) dan
+  `app/apple-icon.png` 180x180 full-bleed untuk iOS. Next memasang link-nya otomatis dari
+  metadata file convention, jadi tidak perlu set `metadata.icons` manual.
 - `viewport` metadata menambahkan `viewport-fit=cover` dan `theme-color`.
 - Perbaikan tak sengaja: sebelumnya `.hero`/`.main` memakai shorthand `padding` sehingga padding
   samping dari `.wrap` hilang dan teks hero nempel ke tepi layar di mobile. Di mobile sekarang
