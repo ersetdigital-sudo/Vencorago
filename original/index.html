@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VENCORAGO — Top Up &amp; Bayar Tagihan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0f5f5c;--teal2:#1a7a72;--gold:#b08a5a;--bg:#f7f4ee;--card:#fff;--ink:#16302e;--mut:#6b7774;--line:#e7e1d6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display';font-size:22px;letter-spacing:1px}
+.logo b{color:var(--gold);font-size:28px}
+.menu{display:flex;gap:36px;font-size:14px;color:var(--mut)}
+.menu a.on{color:var(--ink);font-weight:600;border-bottom:2px solid var(--gold);padding-bottom:4px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:999px;padding:10px 20px;font:600 14px Inter;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.btn:hover{background:var(--teal2)}
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:center;padding:56px 0 90px}
+.kick{color:var(--gold);letter-spacing:3px;font-size:12px;font-weight:600}
+h1{font-family:'DM Serif Display';font-size:58px;line-height:1.05;margin:14px 0 18px;color:var(--teal)}
+h1 em{color:var(--gold)}
+.hero p{color:var(--mut);font-size:17px;line-height:1.6;max-width:480px}
+.perks{display:flex;gap:28px;margin-top:30px}
+.perk{display:flex;gap:10px;align-items:center;font-size:13px}
+.perk i{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;background:#fff}
+.perk small{display:block;color:var(--mut)}
+.art{position:relative;height:380px;background:radial-gradient(circle at 60% 40%,#e9efe9,#efe9df 70%);border-radius:28px}
+.phone{position:absolute;left:50%;top:30px;transform:translateX(-50%) rotate(-6deg);width:190px;height:320px;background:#fff;border:10px solid #1d2423;border-radius:34px;display:grid;place-items:center;text-align:center;box-shadow:0 30px 60px #0003}
+.phone div{font-family:'DM Serif Display';font-size:18px}.phone b{color:var(--gold);font-size:40px;display:block}
+.chip{position:absolute;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 12px 30px #0001;font-size:12px;font-weight:600;text-align:center}
+.chip span{display:block;font-size:22px}
+.search{background:linear-gradient(90deg,var(--teal),var(--teal2));border-radius:18px;padding:22px 26px;display:grid;grid-template-columns:1fr 1.4fr auto;gap:18px;align-items:end;margin-top:-50px;position:relative;box-shadow:0 20px 40px #0f5f5c33}
+.search label{color:#dfeeea;font-size:13px;display:block;margin-bottom:8px}
+select,input{width:100%;padding:13px 14px;border-radius:10px;border:0;font:14px Inter;background:#fff}
+.gold{background:linear-gradient(90deg,#c8a175,#a9845a);color:#fff;border:0;border-radius:10px;padding:13px 34px;font:600 14px Inter;cursor:pointer}
+.main{display:grid;grid-template-columns:1fr 340px;gap:28px;padding:40px 0}
+h2{font-family:'DM Serif Display';font-size:34px;color:var(--teal);display:flex;align-items:center;gap:14px}
+h2 small{font:13px Inter;color:var(--mut)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0 40px}
+.cat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.2s}
+.cat:hover,.cat.on{border-color:var(--teal);box-shadow:0 10px 24px #0f5f5c1a;transform:translateY(-2px)}
+.cat i{font-style:normal;width:40px;height:40px;border-radius:50%;background:#eaf3f1;display:grid;place-items:center;font-size:20px;margin-bottom:10px}
+.cat b{display:block;font-size:14px}.cat small{color:var(--mut);font-size:12px}
+.prods{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.prod{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.prod .t{display:flex;gap:10px;align-items:center;font-size:13px}
+.prod .t span{font-size:24px}
+.tag{display:inline-block;background:#fbeee4;color:#b4693c;font-size:11px;padding:2px 8px;border-radius:6px;margin:8px 0}
+.prod .row{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.prod button{padding:7px 14px;border-radius:8px}
+aside .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;position:sticky;top:90px}
+.card h3{font-size:16px}.card .sub{color:var(--mut);font-size:12px;margin-bottom:16px}
+.li{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}.li span{color:var(--mut)}
+.tot{border-top:1px solid var(--line);margin-top:10px;padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+.tot b{font-size:24px}
+.prod button svg{width:15px;height:15px}.ic{display:inline-flex;font-style:normal;vertical-align:middle}.ic svg,.cat i svg,.pi svg{width:1em;height:1em}.chip .ic{color:var(--teal);font-size:22px}.perk i,.cat i{color:var(--teal)}.pi{width:40px;height:40px;border-radius:50%;background:#eaf3f1;color:var(--teal);display:grid!important;place-items:center;font-size:20px!important}.qr{display:flex;gap:14px;align-items:center;margin:18px 0;font-size:12px;color:var(--mut)}
+.qr div{width:90px;height:90px;flex:none;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/18px 18px;border:6px solid #fff;outline:1px solid var(--line);border-radius:8px}
+.wa{width:100%;justify-content:center;background:#1f8f6c;border-radius:12px;padding:13px}
+footer{background:#fff;border-top:1px solid var(--line);padding:40px 0;font-size:13px;color:var(--mut)}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1.3fr 1.5fr;gap:24px}
+footer h4{color:var(--ink);margin-bottom:10px}footer a{display:block;margin:5px 0}
+.pay{display:flex;gap:8px;flex-wrap:wrap}.pay span{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-weight:700;color:var(--ink);font-size:11px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+@media(max-width:900px){.hero,.main{grid-template-columns:1fr}.menu{display:none}h1{font-size:40px}.cats,.prods{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr;margin-top:0}.fgrid{grid-template-columns:1fr 1fr}.perks{flex-wrap:wrap}.art{height:320px}}
+.steps{display:flex;justify-content:space-between;margin-bottom:20px;position:relative}.steps:before{content:"";position:absolute;left:14px;right:14px;top:13px;height:2px;background:var(--line)}
+.steps div{position:relative;width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--mut)}
+.steps span{position:absolute;top:32px;font-size:11px;font-weight:500;white-space:nowrap}.steps div.on{border-color:var(--teal);background:var(--teal);color:#fff}.steps div.on span{color:var(--teal)}
+#body{margin-top:34px;animation:f .3s}@keyframes f{from{opacity:0;transform:translateY(6px)}}
+.empty{text-align:center;color:var(--mut);font-size:13px;padding:30px 0}.empty .pi{margin:0 auto 12px;width:56px!important;height:56px!important;font-size:26px!important}
+.noms{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.nom{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;font-size:13px}.nom b{display:block}.nom small{color:var(--teal)}.nom.on{border-color:var(--teal);background:#eaf3f1}
+.pm{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;cursor:pointer;font-size:13px}.pm.on{border-color:var(--teal);background:#eaf3f1}.pm .ic{color:var(--teal);font-size:18px}.pm em{margin-left:auto;font-style:normal;color:var(--mut);font-size:11px}
+.full{width:100%;justify-content:center;border-radius:12px;padding:13px;margin-top:12px}.ghost{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+.lbl{font-size:12px;font-weight:600;margin-top:14px}.cust{display:flex;gap:10px;align-items:center;background:#eaf3f1;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px}
+.qrbox{text-align:center;padding:10px 0}.qrbox .q{width:170px;height:170px;margin:10px auto;border-radius:10px;border:8px solid #fff;outline:1px solid var(--line);background:#fff}
+.va{background:#f4f1ea;border-radius:10px;padding:14px;text-align:center;margin:10px 0}.va b{font-size:22px;letter-spacing:2px}
+.spin{width:36px;height:36px;border:3px solid #eaf3f1;border-top-color:var(--teal);border-radius:50%;animation:r 1s linear infinite;margin:20px auto}@keyframes r{to{transform:rotate(360deg)}}
+.ok{width:64px;height:64px;border-radius:50%;background:#1f8f6c;color:#fff;display:grid;place-items:center;font-size:32px;margin:0 auto 10px}
+.prod .row{white-space:nowrap;gap:6px}.main>*{min-width:0}html,body{overflow-x:hidden}.steps span{left:50%;transform:translateX(-50%)}
+.logo{font-family:Inter,sans-serif!important;gap:10px!important;letter-spacing:0!important}.lm{width:36px;height:36px;flex:none;filter:drop-shadow(0 4px 10px #0f5f5c40)}.lw{font:800 21px Inter,sans-serif;letter-spacing:-.8px;color:#16302e}.lw i{font-style:normal;color:#b08a5a}.prods>*{min-width:0}@media(max-width:900px){.cats,.prods{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:900px){.prod .row{flex-wrap:wrap;white-space:normal}.phone .lw{font-size:16px}}.phone .lm{width:44px;height:44px;margin-bottom:6px}.phone>div{display:flex;flex-direction:column;align-items:center}</style>
+<script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-thinitalic.ttf") format("truetype"); font-style: italic; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-extralightitalic.ttf") format("truetype"); font-style: italic; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-lightitalic.ttf") format("truetype"); font-style: italic; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-extrabolditalic.ttf") format("truetype"); font-style: italic; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-black.ttf") format("truetype"); font-style: normal; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../fonts/inter_24pt-blackitalic.ttf") format("truetype"); font-style: italic; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../fonts/dmserifdisplay-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../fonts/dmserifdisplay-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }</style></head>
+<body>
+<header><div class="wrap nav">
+<a class="logo" href="#"><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span></a>
+<nav class="menu"><a class="on" href="#">Beranda</a><a href="/produk">Produk</a><a href="/cara-bayar">Cara Bayar</a><a href="/status">Cek Status</a><a href="/bantuan">Bantuan</a><a href="/kontak">Kontak</a></nav>
+<a class="btn" href="https://wa.me/6281234567890" target="_blank"><i class="ic" data-i="chat"></i> Hubungi Kami</a>
+</div></header>
+
+<section class="wrap hero">
+<div>
+<div class="kick">SOLUSI PEMBAYARAN DIGITAL ANDA</div>
+<h1>Top Up &amp; Bayar Tagihan,<br><em>Jadi Sederhana.</em></h1>
+<p>Top up e-wallet, pulsa, token listrik, dan tagihan dalam satu tempat. Proses cepat 24 jam, aman dan terpercaya.</p>
+<div class="perks">
+<div class="perk"><i><i class="ic" data-i="zap"></i></i><div>Proses instan<small>24 jam online</small></div></div>
+<div class="perk"><i><i class="ic" data-i="shield"></i></i><div>Transaksi aman<small>Data terlindungi</small></div></div>
+<div class="perk"><i><i class="ic" data-i="headset"></i></i><div>Harga terbaik<small>Selalu update</small></div></div>
+</div></div>
+<div class="art">
+<div class="phone"><div><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span><br><small style="font:12px Inter;color:#6b7774">Pembayaran Lebih Mudah</small></div></div>
+<div class="chip" style="left:8%;top:40px"><span><i class="ic" data-i="zap"></i></span>PLN Prabayar</div>
+<div class="chip" style="left:4%;top:190px"><span><i class="ic" data-i="drop"></i></span>PDAM</div>
+<div class="chip" style="right:8%;top:70px"><span><i class="ic" data-i="wifi"></i></span>Internet</div>
+<div class="chip" style="right:14%;top:220px"><span><i class="ic" data-i="shield"></i></span>BPJS</div>
+</div>
+</section>
+
+<div class="wrap"><div class="search">
+<div><label>Pilih Produk</label><select id="sel"></select></div>
+<div><label>Nomor Pelanggan</label><input id="num" inputmode="numeric" placeholder="Masukkan nomor pelanggan"></div>
+<button class="gold" onclick="cek()">Cek &amp; Bayar →</button>
+</div></div>
+
+<section class="wrap main">
+<div>
+<h2 id="layanan">Kategori <small>— Pilih layanan yang kamu butuhkan</small></h2>
+<div class="cats" id="cats"></div>
+<div class="kick" id="produk" style="font-family:'DM Serif Display';letter-spacing:0;font-size:18px">Produk Pilihan</div>
+<h2 style="margin-top:0">Paling sering dibeli.</h2>
+<div class="prods" id="prods"></div>
+</div>
+<aside><div class="card" id="panel">
+<div class="steps" id="steps"><div>1<span>Produk</span></div><div>2<span>Detail</span></div><div>3<span>Bayar</span></div><div>4<span>Selesai</span></div></div>
+<div id="body"></div>
+</div></aside>
+</section>
+
+<footer id="kontak"><div class="wrap fgrid">
+<div><div class="logo" style="color:#16302e"><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span></div><p style="margin-top:10px">Solusi pembayaran digital yang aman, cepat dan terpercaya untuk kebutuhan harian kamu.</p></div>
+<div><h4>Menu</h4><a href="#">Beranda</a><a href="#layanan">Layanan</a><a href="/cara-bayar">Cara Bayar</a><a href="/kontak">Kontak</a></div>
+<div><h4>Bantuan</h4><a href="/bantuan">Pusat Bantuan</a><a>Syarat &amp; Ketentuan</a><a>Kebijakan Privasi</a><a href="/status">Status Transaksi</a></div>
+<div><h4>Hubungi Kami</h4><a href="https://wa.me/6281234567890"><i class="ic" data-i="chat"></i> +62 812 3456 7890</a><small>Online setiap hari (24 jam)</small></div>
+<div><h4>Metode Pembayaran</h4><div class="pay"><span>QRIS</span><span>DANA</span><span>OVO</span><span>GoPay</span><span>ShopeePay</span></div></div>
+</div><div class="wrap" style="margin-top:24px">© 2026 VENCORAGO. All rights reserved.</div></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const SV={chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',headset:'<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1"/><rect x="17" y="14" width="4" height="6" rx="1"/>',drop:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',wifi:'<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/>',receipt:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',tv:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="m8 2 4 4 4-4"/>',wallet:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="16" cy="13.5" r="1.2"/>',bank:'<path d="M3 10 12 4l9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/>',check:'<path d="m5 12 5 5 9-10"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',qr:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v7h-4"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SV[n]}</svg>`;
+document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=ic(e.dataset.i));
+const WA='6281234567890',ADMIN=1500,rp=n=>"Rp "+n.toLocaleString("id-ID");
+const C=[["phone","Pulsa","Pulsa semua operator",[5e3,1e4,25e3,5e4,1e5]],["wifi","Paket Data","Internet lebih hemat",[25e3,5e4,75e3,1e5]],["zap","Token PLN","Listrik prabayar",[2e4,5e4,1e5,2e5,5e5]],["drop","PDAM","Tagihan air daerah",null],["shield","BPJS Kesehatan","Bayar lebih mudah",null],["tv","Internet & TV","IndiHome, First, dll",null],["wallet","E-Wallet","DANA, OVO, GoPay",[2e4,5e4,1e5,2e5]],["bank","Multifinance","Angsuran kendaraan",null]];
+const BILL={"PDAM":87500,"BPJS Kesehatan":150000,"Internet & TV":385000,"Multifinance":1250000};
+const P=[["wallet","Saldo DANA",1e5,"E-Wallet"],["phone","Pulsa Telkomsel",25e3,"Pulsa"],["zap","Token PLN",5e4,"Token PLN"],["wallet","Saldo OVO",2e5,"E-Wallet"]];
+const PM=[["qr","QRIS","Semua e-wallet & m-banking",0],["card","Virtual Account BCA","Cek otomatis",2500],["card","Virtual Account Mandiri","Cek otomatis",2500],["wallet","DANA","Bayar langsung",0]];
+let st={},timer;const $=id=>document.getElementById(id);
+cats.innerHTML=C.map(c=>`<div class="cat" data-n="${c[1]}"><i>${ic(c[0])}</i><b>${c[1]}</b><small>${c[2]}</small><a href="/produk?k=${encodeURIComponent(c[1])}" onclick="event.stopPropagation()" style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:var(--teal)">Lihat detail →</a></div>`).join("");
+sel.innerHTML='<option value="">Pilih layanan</option>'+C.map(c=>`<option>${c[1]}</option>`).join("");
+prods.innerHTML=P.map((p,i)=>`<div class="prod"><div class="t"><span class="pi">${ic(p[0])}</span><div>${p[1]}<br><b>${rp(p[2])}</b></div></div><span class="tag">Harga bersaing</span><div class="row">${rp(p[2]+500)}<button class="btn" onclick="buy(${i})">${ic("cart")} Beli</button></div></div>`).join("");
+document.querySelectorAll(".cat").forEach(el=>el.onclick=()=>{pick(el.dataset.n);num.focus()});
+sel.onchange=()=>pick(sel.value);
+function step(n){document.querySelectorAll("#steps div").forEach((d,i)=>d.classList.toggle("on",i<n));}
+function show(h,n){clearInterval(timer);step(n);$("body").outerHTML='<div id="body">'+h+'</div>'}
+function cat(n){return C.find(c=>c[1]==n)}
+function pick(n,h){if(!n)return start();sel.value=n;st={cat:n,h:h||0,prod:n};document.querySelectorAll(".cat").forEach(e=>e.classList.toggle("on",e.dataset.n==n));
+ const c=cat(n);let h2=`<div class="lbl" style="margin-top:0">Layanan</div><div class="cust"><span class="pi">${ic(c[0])}</span><b>${n}</b></div>`;
+ if(c[3]){h2+=`<div class="lbl">Pilih nominal</div><div class="noms">${c[3].map(v=>`<div class="nom ${v==st.h?'on':''}" onclick="nom(${v},this)"><b>${rp(v)}</b><small>Harga ${rp(v+ (v<2e4?1000:500))}</small></div>`).join("")}</div>`}
+ else h2+=`<p style="font-size:13px;color:var(--mut);margin:12px 0">Tagihan akan dicek otomatis setelah kamu memasukkan nomor pelanggan.</p>`;
+ h2+=`<button class="btn full" onclick="cek()">Lanjut Cek Tagihan →</button>`;show(h2,1);document.querySelector(".search").scrollIntoView({behavior:"smooth",block:"center"})}
+function nom(v,el){st.h=v;document.querySelectorAll(".nom").forEach(e=>e.classList.remove("on"));el.classList.add("on")}
+function buy(i){const p=P[i];pick(p[3],p[2]);st.prod=p[1];toast(p[1]+" dipilih, masukkan nomor tujuan");num.focus()}
+function start(){st={};document.querySelectorAll(".cat").forEach(e=>e.classList.remove("on"));show(`<div class="empty"><div class="pi">${ic("receipt")}</div><b style="color:var(--ink)">Belum ada transaksi</b><br>Pilih layanan atau produk untuk memulai.</div>`,0)}
+function cek(){if(!st.cat)return toast("Pilih produk dulu ya");const c=cat(st.cat);if(c[3]&&!st.h)return toast("Pilih nominal dulu");if(num.value.replace(/\D/g,"").length<8)return toast("Nomor pelanggan minimal 8 digit");
+ show(`<div class="spin"></div><p class="empty" style="padding:0">Mengecek data pelanggan...</p>`,2);
+ setTimeout(()=>{if(!c[3])st.h=BILL[st.cat];st.no=num.value;st.name=["Budi Santoso","Siti Rahma","Andi Pratama","Dewi Lestari"][st.no.length%4];st.pm=0;detail()},1100)}
+function fee(){return PM[st.pm][3]+ADMIN}
+function detail(){show(`<div class="cust"><span class="pi">${ic("user")}</span><div><small style="color:var(--mut)">Nama pelanggan</small><br><b>${st.name}</b></div></div>
+<div class="li"><span>Produk</span><b>${st.prod}</b></div><div class="li"><span>No. Pelanggan</span><b>${st.no}</b></div><div class="li"><span>${BILL[st.cat]?'Tagihan':'Nominal'}</span><b>${rp(st.h)}</b></div><div class="li"><span>Biaya admin</span><b id="fe">${rp(fee())}</b></div>
+<div class="lbl">Metode pembayaran</div>${PM.map((m,i)=>`<div class="pm ${i==st.pm?'on':''}" onclick="pm(${i})"><span class="ic">${ic(m[0])}</span><b>${m[1]}</b><em>${m[3]?'+'+rp(m[3]):m[2]}</em></div>`).join("")}
+<div class="tot"><span>Total</span><b id="tt">${rp(st.h+fee())}</b></div><button class="btn full" onclick="pay()">Bayar Sekarang</button><button class="btn full ghost" onclick="pick(st.cat,st.h)">Ubah pesanan</button>`,2)}
+function pm(i){st.pm=i;detail()}
+function qrsvg(){let r="",x=0;for(let i=0;i<21;i++)for(let j=0;j<21;j++){const f=(i<7&&j<7)||(i<7&&j>13)||(i>13&&j<7);const on=f?((i%14==0||i%14==6||j%14==0||j%14==6||(i%14>1&&i%14<5&&j%14>1&&j%14<5))&&!(i%14>4&&i%14<6)):((i*7+j*13+i*j)%3==0);if(on&&!(f&&((i%14==1||i%14==5)&&j%14>0&&j%14<6||(j%14==1||j%14==5)&&i%14>0&&i%14<6)))r+=`<rect x="${j}" y="${i}" width="1" height="1"/>`}return `<svg viewBox="0 0 21 21" width="100%" height="100%" fill="#111">${r}</svg>`}
+function pay(){st.inv="VCR"+Date.now().toString().slice(-9);const m=PM[st.pm],t=rp(st.h+fee());let h=`<div class="li"><span>No. Invoice</span><b>${st.inv}</b></div><div class="li"><span>Total bayar</span><b style="color:var(--teal);font-size:18px">${t}</b></div>`;
+ if(st.pm==0)h+=`<div class="qrbox"><b>Scan QRIS</b><div class="q">${qrsvg()}</div><small style="color:var(--mut)">Bayar pakai DANA, OVO, GoPay, ShopeePay atau m-banking</small></div>`;
+ else if(m[1]=="DANA")h+=`<div class="va">Kamu akan diarahkan ke aplikasi DANA<br><small>Selesaikan pembayaran di aplikasi</small></div>`;
+ else h+=`<div class="va"><small>Nomor ${m[1]}</small><br><b>8808 ${st.inv.slice(-8,-4)} ${st.inv.slice(-4)}</b><br><button class="btn ghost" style="margin-top:8px;padding:6px 12px" onclick="navigator.clipboard&&navigator.clipboard.writeText('8808${st.inv.slice(-8)}');toast('Nomor VA disalin')">${ic("copy")} Salin</button></div>`;
+ h+=`<p style="text-align:center;font-size:12px;color:var(--mut)">${ic("clock")} Selesaikan dalam <b id="tm">15:00</b></p><button class="btn full" onclick="check()">Saya Sudah Bayar</button><button class="btn full ghost" onclick="detail()">Ganti metode</button>`;
+ save("pending");show(h,3);let s=900;timer=setInterval(()=>{s--;const e=$("tm");if(!e)return;e.textContent=`${String(s/60|0).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;if(s<=0){clearInterval(timer);toast("Waktu habis, silakan ulangi");detail()}},1000);
+ document.querySelector("aside").scrollIntoView({behavior:"smooth"})}
+function check(){show(`<div class="spin"></div><p class="empty" style="padding:0">Memverifikasi pembayaran...</p>`,3);setTimeout(done,1600)}
+function done(){const tok=st.cat=="Token PLN"?Array.from({length:5},()=>String(1000+Math.random()*9000|0)).join("-"):"SN"+Date.now().toString().slice(-10);st.sn=tok;save("success");
+ show(`<div style="text-align:center"><div class="ok">${ic("check")}</div><b style="font-size:18px">Transaksi Berhasil</b><p style="color:var(--mut);font-size:12px;margin:4px 0 14px">${new Date().toLocaleString("id-ID")}</p></div>
+<div class="li"><span>Invoice</span><b>${st.inv}</b></div><div class="li"><span>Produk</span><b>${st.prod}</b></div><div class="li"><span>Pelanggan</span><b>${st.name}</b></div><div class="li"><span>Metode</span><b>${PM[st.pm][1]}</b></div><div class="li"><span>Total</span><b>${rp(st.h+fee())}</b></div>
+<a href="/status?inv=${st.inv}" style="display:block;text-align:center;font-size:12px;color:var(--teal);font-weight:600;margin:6px 0">Lihat status invoice →</a><div class="va"><small>${st.cat=="Token PLN"?"Token Listrik":"Serial Number"}</small><br><b style="font-size:16px">${tok}</b></div>
+<button class="btn full wa" onclick="wa()">${ic("chat")} Kirim bukti via WhatsApp</button><button class="btn full ghost" onclick="num.value='';start()">Transaksi Baru</button>`,4)}
+function wa(){const m=`Halo VENCORAGO, transaksi saya:%0AInvoice: ${st.inv}%0AProduk: ${st.prod}%0ANomor: ${st.no}%0ATotal: ${rp(st.h+fee())}%0ASN: ${st.sn}`;window.open(`https://wa.me/${WA}?text=${m}`,"_blank")}
+function save(status){const d=JSON.parse(localStorage.getItem('vcr_tx')||'{}');d[st.inv]={inv:st.inv,prod:st.prod,cat:st.cat,no:st.no,name:st.name,pm:PM[st.pm][1],total:st.h+fee(),status,sn:st.sn||'',time:d[st.inv]?.time||Date.now(),paid:status=='success'?Date.now():null};localStorage.setItem('vcr_tx',JSON.stringify(d))}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2200)}
+const Q=new URLSearchParams(location.search);if(Q.get("k")&&cat(Q.get("k"))){pick(Q.get("k"),+Q.get("h")||0);if(Q.get("p"))st.prod=Q.get("p");if(Q.get("no")){num.value=Q.get("no");cek()}}else start();
+</script>
+</body></html>

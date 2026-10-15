@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Detail Produk — VENCORAGO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0f5f5c;--teal2:#1a7a72;--gold:#b08a5a;--bg:#f7f4ee;--ink:#16302e;--mut:#6b7774;--line:#e7e1d6}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{background:#fff;border-bottom:1px solid var(--line)}.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display';font-size:22px;letter-spacing:1px}.logo b{color:var(--gold);font-size:28px}
+.menu{display:flex;gap:36px;font-size:14px;color:var(--mut)}.menu a.on{color:var(--ink);font-weight:600;border-bottom:2px solid var(--gold);padding-bottom:4px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:999px;padding:10px 20px;font:600 14px Inter;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+svg{width:1em;height:1em;vertical-align:middle}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:22px 0 6px;scrollbar-width:none}.tabs a{white-space:nowrap;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:13px;display:flex;gap:6px;align-items:center}.tabs a.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.crumb{font-size:12px;color:var(--mut);margin:18px 0 0}
+.hero{display:flex;gap:20px;align-items:center;padding:20px 0 26px}.big{width:72px;height:72px;border-radius:20px;background:#eaf3f1;color:var(--teal);display:grid;place-items:center;font-size:34px;flex:none}
+h1{font-family:'DM Serif Display';font-size:42px;color:var(--teal)}.hero p{color:var(--mut);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:26px;padding-bottom:60px}.grid>*{min-width:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px}
+h2{font-size:16px;margin-bottom:14px}
+.ops{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.op{padding:8px 14px;border-radius:10px;border:1px solid var(--line);font-size:13px;cursor:pointer;background:#fff}.op.on{border-color:var(--teal);background:#eaf3f1;color:var(--teal);font-weight:600}
+.items{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.it{border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:.2s;position:relative}.it:hover{border-color:var(--teal)}.it.on{border-color:var(--teal);background:#eaf3f1;box-shadow:0 8px 20px #0f5f5c1a}
+.it b{display:block;font-size:15px}.it small{color:var(--mut);font-size:12px;display:block;margin:4px 0 10px;min-height:30px}.it .pr{color:var(--teal);font-weight:700}.it s{color:#aaa;font-size:11px;margin-left:4px}
+.hot{position:absolute;top:10px;right:10px;background:#fbeee4;color:#b4693c;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px}
+.bill{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bill div{background:#f4f1ea;border-radius:12px;padding:14px;font-size:13px}.bill b{display:block;margin-top:4px}
+ol,ul{padding-left:18px;font-size:14px;line-height:1.9;color:#33504c}
+details{border-bottom:1px solid var(--line);padding:12px 0;font-size:14px}details:last-child{border:0}summary{cursor:pointer;font-weight:600}details p{color:var(--mut);margin-top:8px;line-height:1.6}
+aside .card{position:sticky;top:20px}input{width:100%;padding:13px;border-radius:10px;border:1px solid var(--line);font:14px Inter;margin:6px 0 14px}
+.li{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}.li span{color:var(--mut)}.tot{border-top:1px solid var(--line);margin-top:8px;padding-top:12px;display:flex;justify-content:space-between;align-items:center}.tot b{font-size:22px}
+.full{width:100%;border-radius:12px;padding:14px;margin-top:14px}
+.feat{display:flex;flex-direction:column;gap:10px;margin-top:16px;font-size:12px;color:var(--mut)}.feat span{display:flex;gap:8px;align-items:center}.feat svg{color:var(--teal);font-size:16px}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:30px 0 50px}
+@media(max-width:900px){.menu{display:none}.grid{grid-template-columns:1fr}.items{grid-template-columns:1fr 1fr}h1{font-size:32px}.bill{grid-template-columns:1fr}.it s{display:none}.it{padding-top:26px}.hot{top:6px;right:6px}}ol{list-style:decimal;padding-left:22px}
+.logo{font-family:Inter,sans-serif!important;gap:10px!important;letter-spacing:0!important}.lm{width:36px;height:36px;flex:none;filter:drop-shadow(0 4px 10px #0f5f5c40)}.lw{font:800 21px Inter,sans-serif;letter-spacing:-.8px;color:#16302e}.lw i{font-style:normal;color:#b08a5a}</style><script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thinitalic.ttf") format("truetype"); font-style: italic; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralightitalic.ttf") format("truetype"); font-style: italic; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-lightitalic.ttf") format("truetype"); font-style: italic; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabolditalic.ttf") format("truetype"); font-style: italic; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-black.ttf") format("truetype"); font-style: normal; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-blackitalic.ttf") format("truetype"); font-style: italic; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }</style></head><body>
+<header><div class="wrap nav"><a class="logo" href="/"><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span></a>
+<nav class="menu"><a href="/">Beranda</a><a class="on" href="/produk">Produk</a><a href="/status">Cek Status</a><a href="/cara-bayar">Cara Bayar</a><a href="/bantuan">Bantuan</a><a href="/kontak">Kontak</a></nav>
+<a class="btn" href="https://wa.me/6281234567890" target="_blank">Hubungi Kami</a></div></header>
+<main class="wrap">
+<div class="tabs" id="tabs"></div>
+<div class="crumb"><a href="/">Beranda</a> / Produk / <b id="cr"></b></div>
+<section class="hero"><div class="big" id="bi"></div><div><h1 id="tt"></h1><p id="ds"></p></div></section>
+<div class="grid"><div>
+<div class="card"><h2 id="h2"></h2><div class="ops" id="ops"></div><div id="list"></div></div>
+<div class="card"><h2>Cara pembelian</h2><ol id="how"></ol></div>
+<div class="card"><h2>Pertanyaan umum</h2><div id="faq"></div></div>
+</div>
+<aside><div class="card"><h2>Ringkasan</h2>
+<label style="font-size:13px;font-weight:600" id="nl"></label><input id="num" inputmode="numeric">
+<div class="li"><span>Produk</span><b id="sp">-</b></div><div class="li"><span>Harga</span><b id="sh">-</b></div><div class="li"><span>Biaya admin</span><b>Rp 1.500</b></div>
+<div class="tot"><span>Total</span><b id="st">Rp 0</b></div>
+<button class="btn full" onclick="go()">Lanjut Bayar →</button>
+<div class="feat"><span id="f1"></span><span id="f2"></span><span id="f3"></span></div>
+</div></aside></div>
+</main>
+<footer>© 2026 VENCORAGO · <a href="/status" style="color:var(--teal);font-weight:600">Cek status transaksi</a></footer>
+<script>
+const SV={phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',wifi:'<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/>',zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',drop:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',tv:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="m8 2 4 4 4-4"/>',wallet:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="16" cy="13.5" r="1.2"/>',bank:'<path d="M3 10 12 4l9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SV[n]}</svg>`;
+const rp=n=>"Rp "+n.toLocaleString("id-ID");
+const N=(a,m=1000)=>a.map(v=>({n:rp(v),v,p:v+(v<2e4?m:500),d:"Masuk instan ke nomor tujuan"}));
+const K={
+"Pulsa":{i:"phone",d:"Isi pulsa semua operator, masuk dalam hitungan detik.",nl:"Nomor HP",ph:"08xxxxxxxxxx",ops:{Telkomsel:N([5e3,1e4,2e4,25e3,5e4,1e5]),Indosat:N([5e3,1e4,25e3,5e4,1e5]),XL:N([5e3,1e4,25e3,5e4,1e5]),Tri:N([5e3,1e4,2e4,5e4,1e5]),Smartfren:N([1e4,2e4,5e4,1e5])}},
+"Paket Data":{i:"wifi",d:"Kuota internet hemat untuk semua operator.",nl:"Nomor HP",ph:"08xxxxxxxxxx",ops:{Telkomsel:[{n:"Kuota 7 GB",d:"30 hari, semua jaringan",v:5e4,p:51e3},{n:"Kuota 15 GB",d:"30 hari + 2 GB malam",v:85e3,p:86e3},{n:"Kuota 30 GB",d:"30 hari, 4G/5G",v:13e4,p:131e3}],Indosat:[{n:"Freedom 9 GB",d:"30 hari",v:45e3,p:46e3},{n:"Freedom 20 GB",d:"30 hari",v:8e4,p:81e3},{n:"Freedom Unlimited",d:"30 hari, FUP harian",v:1e5,p:101e3}],XL:[{n:"Xtra Combo 10 GB",d:"30 hari + nelpon",v:6e4,p:61e3},{n:"Xtra Combo 25 GB",d:"30 hari + nelpon",v:11e4,p:111e3}]}},
+"Token PLN":{i:"zap",d:"Beli token listrik prabayar, token langsung tampil setelah bayar.",nl:"Nomor Meter / ID Pelanggan",ph:"11 atau 12 digit",ops:{"PLN Prabayar":N([2e4,5e4,1e5,2e5,5e5,1e6])}},
+"E-Wallet":{i:"wallet",d:"Top up saldo dompet digital favorit kamu.",nl:"Nomor HP terdaftar",ph:"08xxxxxxxxxx",ops:{DANA:N([2e4,5e4,1e5,2e5,5e5]),OVO:N([2e4,5e4,1e5,2e5]),GoPay:N([2e4,5e4,1e5,2e5]),ShopeePay:N([2e4,5e4,1e5])}},
+"PDAM":{i:"drop",d:"Bayar tagihan air PDAM di berbagai daerah.",nl:"ID Pelanggan PDAM",ph:"Nomor pelanggan",bill:{"Contoh tagihan":"Rp 87.500","Jatuh tempo":"Tanggal 20 setiap bulan"},ops:{"PDAM Jakarta":0,"PDAM Surabaya":0,"PDAM Bandung":0,"PDAM Medan":0}},
+"BPJS Kesehatan":{i:"shield",d:"Bayar iuran BPJS Kesehatan untuk seluruh anggota keluarga.",nl:"Nomor VA Keluarga",ph:"8888xxxxxxxxxxx",bill:{"Kelas 1":"Rp 150.000 / orang","Kelas 2":"Rp 100.000 / orang","Kelas 3":"Rp 42.000 / orang","Bayar sampai":"12 bulan sekaligus"},ops:{"BPJS Kesehatan":0}},
+"Internet & TV":{i:"tv",d:"Bayar tagihan internet rumah dan TV berbayar.",nl:"Nomor Pelanggan",ph:"ID pelanggan",bill:{"Contoh tagihan":"Rp 385.000","Cek tagihan":"Otomatis setelah input"},ops:{IndiHome:0,"First Media":0,MyRepublic:0,Biznet:0}},
+"Multifinance":{i:"bank",d:"Bayar angsuran kendaraan dan pinjaman.",nl:"Nomor Kontrak",ph:"Nomor kontrak",bill:{"Contoh angsuran":"Rp 1.250.000","Konfirmasi":"Real-time ke leasing"},ops:{"Adira Finance":0,FIF:0,"BAF":0,"WOM Finance":0}}};
+const q=new URLSearchParams(location.search);let cat=K[q.get("k")]?q.get("k"):"Pulsa",c=K[cat],op=Object.keys(c.ops)[0],sel=null;
+tabs.innerHTML=Object.keys(K).map(k=>`<a href="?k=${encodeURIComponent(k)}" class="${k==cat?'on':''}">${ic(K[k].i)} ${k}</a>`).join("");
+document.title=cat+" — VENCORAGO";cr.textContent=tt.textContent=cat;bi.innerHTML=ic(c.i);ds.textContent=c.d;nl.textContent=c.nl;num.placeholder=c.ph;
+h2.textContent=c.bill?"Pilih penyedia":"Pilih operator & nominal";
+function render(){ops.innerHTML=Object.keys(c.ops).length>1||c.bill?Object.keys(c.ops).map(o=>`<div class="op ${o==op?'on':''}" onclick="op='${o}';sel=null;render()">${o}</div>`).join(""):"";
+ if(c.bill){list.innerHTML=`<p style="font-size:13px;color:var(--mut);margin:14px 0">Tagihan dicek otomatis berdasarkan nomor pelanggan.</p><div class="bill">${Object.entries(c.bill).map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join("")}</div>`;sel={n:op,p:0}}
+ else list.innerHTML=`<div class="items" style="margin-top:14px">${c.ops[op].map((x,i)=>`<div class="it ${sel&&sel.i==i?'on':''}" onclick="pick(${i})">${i==1?'<span class="hot">TERLARIS</span>':''}<b>${x.n}</b><small>${x.d}</small><span class="pr">${rp(x.p)}</span>${x.p>x.v?`<s>${rp(x.p+1500)}</s>`:''}</div>`).join("")}</div>`;sum()}
+function pick(i){const x=c.ops[op][i];sel={...x,i};render()}
+function sum(){sp.textContent=sel?(c.bill?op:op+" "+sel.n):"-";sh.textContent=sel?(sel.p?rp(sel.p):"Dicek otomatis"):"-";st.textContent=sel&&sel.p?rp(sel.p+1500):c.bill&&sel?"Dicek otomatis":"Rp 0"}
+how.innerHTML=[`Pilih ${c.bill?"penyedia":"operator dan nominal"}`,`Masukkan ${c.nl.toLowerCase()}`,"Klik Lanjut Bayar lalu cek detail pesanan","Pilih metode bayar: QRIS, Virtual Account, atau DANA",cat=="Token PLN"?"Token listrik langsung muncul setelah pembayaran":"Transaksi diproses otomatis, cek status kapan saja"].map(s=>`<li>${s}</li>`).join("");
+faq.innerHTML=[["Berapa lama prosesnya?","Rata-rata 5 detik sampai 3 menit setelah pembayaran terverifikasi."],["Bagaimana kalau transaksi gagal?","Dana dikembalikan 100% ke saldo atau rekening kamu maksimal 1x24 jam."],["Apakah ada biaya tambahan?","Hanya biaya admin Rp 1.500. Virtual Account dikenakan tambahan Rp 2.500."],["Bisa cek transaksi sebelumnya?","Bisa, buka halaman Cek Status dan masukkan nomor invoice kamu."]].map(([a,b])=>`<details><summary>${a}</summary><p>${b}</p></details>`).join("");
+f1.innerHTML=ic("clock")+" Proses otomatis 24 jam";f2.innerHTML=ic("shield")+" Transaksi aman & terenkripsi";f3.innerHTML=ic("check")+" Garansi uang kembali jika gagal";
+function go(){if(!sel)return alert("Pilih produk dulu ya");const n=num.value.replace(/\D/g,"");if(n.length<8)return alert(c.nl+" minimal 8 digit");location.href=`/?k=${encodeURIComponent(cat)}&h=${sel.v||0}&p=${encodeURIComponent(c.bill?op:op+" "+sel.n)}&no=${n}`}
+render();
+</script></body></html>

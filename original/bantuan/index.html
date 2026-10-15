@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pusat Bantuan — VENCORAGO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0f5f5c;--teal2:#1a7a72;--gold:#b08a5a;--bg:#f7f4ee;--ink:#16302e;--mut:#6b7774;--line:#e7e1d6}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{background:#fff;border-bottom:1px solid var(--line)}.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display';font-size:22px;letter-spacing:1px}.logo b{color:var(--gold);font-size:28px}
+.menu{display:flex;gap:36px;font-size:14px;color:var(--mut)}.menu a.on{color:var(--ink);font-weight:600;border-bottom:2px solid var(--gold);padding-bottom:4px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:999px;padding:10px 20px;font:600 14px Inter;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}.btn:hover{background:var(--teal2)}
+.ghost{background:#fff;color:var(--teal);border:1px solid var(--teal)}.ghost:hover{background:#eaf3f1}
+svg{width:1em;height:1em;vertical-align:middle}
+.hero{background:linear-gradient(120deg,var(--teal),var(--teal2));color:#fff;border-radius:28px;margin-top:28px;padding:56px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;border:50px solid #ffffff12}
+.kick{color:#e4c9a2;letter-spacing:3px;font-size:12px;font-weight:600}
+h1{font-family:'DM Serif Display';font-size:50px;line-height:1.1;margin:12px 0}h1 em{color:#e4c9a2}.hero p{color:#d6e8e4;max-width:540px;line-height:1.6}
+h2{font-family:'DM Serif Display';font-size:32px;color:var(--teal);margin-bottom:6px}.sub{color:var(--mut);font-size:14px;margin-bottom:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px}
+.ico{width:48px;height:48px;border-radius:14px;background:#eaf3f1;color:var(--teal);display:grid;place-items:center;font-size:22px;flex:none}
+details{border-bottom:1px solid var(--line);padding:16px 0}details:last-child{border:0}summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:10px}summary:after{content:"+";color:var(--teal);font-size:20px;line-height:1}details[open] summary:after{content:"–"}details p{color:var(--mut);margin-top:10px;line-height:1.7;font-size:14px}
+footer{background:#fff;border-top:1px solid var(--line);margin-top:70px;padding:30px 0;color:var(--mut);font-size:13px}footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}footer nav{display:flex;gap:20px}
+section{margin-top:56px}
+@media(max-width:900px){.menu{display:none}.hero{padding:34px 24px}h1{font-size:36px}}
+
+.hero{text-align:center}.hero p{margin:0 auto}.hero:before{content:"";position:absolute;left:-60px;bottom:-90px;width:240px;height:240px;border-radius:50%;border:40px solid #ffffff10}
+.sb{max-width:600px;margin:26px auto 0;background:#fff;border-radius:14px;display:flex;align-items:center;gap:10px;padding:6px 6px 6px 18px;color:var(--mut);position:relative;z-index:2}.sb input{flex:1;border:0;font:15px Inter;padding:12px 0;outline:0;color:var(--ink)}
+.pop{margin-top:14px;font-size:13px;color:#d6e8e4;position:relative;z-index:2}.pop a{background:#ffffff1f;padding:5px 12px;border-radius:999px;margin:4px;display:inline-block;cursor:pointer}
+.topics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tp{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;gap:16px;cursor:pointer;transition:.2s}.tp:hover,.tp.on{border-color:var(--teal);box-shadow:0 12px 26px #0f5f5c14;transform:translateY(-2px)}.tp.on{background:#eaf3f1}
+.tp b{display:block;margin-bottom:4px}.tp small{color:var(--mut);font-size:13px;line-height:1.5}.tp em{font-style:normal;color:var(--teal);font-size:12px;font-weight:600;display:block;margin-top:8px}
+.faqw{display:grid;grid-template-columns:1fr 320px;gap:24px}.faqw>*{min-width:0}
+.cnt{font-size:13px;color:var(--mut);margin-bottom:6px}.none{display:none;text-align:center;color:var(--mut);padding:30px}
+.side .card{margin-bottom:16px}.side a.btn{width:100%;border-radius:12px;padding:13px;margin-top:10px}
+.steps div{display:flex;gap:12px;font-size:13px;padding:8px 0;color:var(--mut)}.steps b{width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:12px;flex:none}
+@media(max-width:900px){.topics{grid-template-columns:1fr}.faqw{grid-template-columns:1fr}}
+.logo{font-family:Inter,sans-serif!important;gap:10px!important;letter-spacing:0!important}.lm{width:36px;height:36px;flex:none;filter:drop-shadow(0 4px 10px #0f5f5c40)}.lw{font:800 21px Inter,sans-serif;letter-spacing:-.8px;color:#16302e}.lw i{font-style:normal;color:#b08a5a}</style><script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thinitalic.ttf") format("truetype"); font-style: italic; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralightitalic.ttf") format("truetype"); font-style: italic; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-lightitalic.ttf") format("truetype"); font-style: italic; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabolditalic.ttf") format("truetype"); font-style: italic; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-black.ttf") format("truetype"); font-style: normal; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-blackitalic.ttf") format("truetype"); font-style: italic; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }</style></head><body><header><div class="wrap nav"><a class="logo" href="/"><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span></a><nav class="menu"><a href="/">Beranda</a><a href="/produk">Produk</a><a href="/status">Cek Status</a><a href="/bantuan" class="on">Bantuan</a><a href="/kontak">Kontak</a></nav><a class="btn" href="https://wa.me/6281234567890" target="_blank">Hubungi Kami</a></div></header>
+<main class="wrap">
+<div class="hero"><div class="kick">PUSAT BANTUAN</div><h1>Halo, ada yang<br><em>bisa kami bantu?</em></h1><p>Cari jawaban seputar transaksi, pembayaran, dan refund.</p>
+<div class="sb"><i data-i="search" style="font-style:normal;display:contents"></i><input id="q" placeholder="Cari pertanyaan, misal: token belum masuk"><button class="btn" style="border-radius:10px" onclick="filt()">Cari</button></div>
+<div class="pop">Populer: <a onclick="qs('token')">Token belum masuk</a><a onclick="qs('refund')">Refund</a><a onclick="qs('QRIS')">Bayar QRIS</a><a onclick="qs('pending')">Transaksi pending</a></div></div>
+<section><h2>Topik bantuan</h2><p class="sub">Pilih topik untuk melihat pertanyaan terkait.</p><div class="topics" id="topics"></div></section>
+<section class="faqw"><div class="card"><h2 id="ft">Semua pertanyaan</h2><div class="cnt" id="cnt"></div><div id="faq"></div><div class="none" id="none">Tidak ada hasil. Coba kata lain atau <a href="/kontak" style="color:var(--teal);font-weight:600">hubungi CS</a>.</div></div>
+<div class="side"><div class="card"><div class="ico"><i data-i="receipt" style="font-style:normal;display:contents"></i></div><h3 style="margin:14px 0 6px">Cek status transaksi</h3><p class="sub" style="margin:0">Lacak pesanan pakai nomor invoice.</p><a class="btn ghost" href="/status">Cek Status</a></div>
+<div class="card"><h3 style="margin-bottom:8px">Masih butuh bantuan?</h3><div class="steps"><div><b>1</b>Siapkan nomor invoice</div><div><b>2</b>Jelaskan kendala singkat</div><div><b>3</b>CS balas &lt; 5 menit</div></div><a class="btn" href="/kontak">Hubungi CS</a></div></div></section>
+</main><footer><div class="wrap"><span>© 2026 VENCORAGO. Solusi pembayaran digital.</span><nav><a href="/produk">Produk</a><a href="/cara-bayar">Cara Bayar</a><a href="/status">Cek Status</a><a href="/bantuan">Pusat Bantuan</a><a href="/kontak">Kontak</a></nav></div></footer><script>const SV={chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/>',pin:'<path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',refund:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',receipt:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',check:'<path d="m5 12 5 5 9-10"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SV[n]}</svg>`;
+document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=ic(e.dataset.i));
+const T=[["card","Pembayaran","QRIS, Virtual Account, dan e-wallet"],["alert","Transaksi Gagal","Pending, gagal, atau belum masuk"],["refund","Refund","Pengembalian dana dan prosesnya"],["zap","Token PLN","Token listrik dan meteran"],["receipt","Tagihan","PDAM, BPJS, internet, angsuran"],["shield","Keamanan","Akun, data, dan penipuan"]];
+const F=[["Pembayaran","Metode pembayaran apa saja yang tersedia?","Kamu bisa bayar pakai QRIS (semua e-wallet & m-banking), Virtual Account BCA dan Mandiri, serta DANA."],
+["Pembayaran","Bagaimana cara bayar pakai QRIS?","Pilih QRIS di langkah pembayaran, lalu scan kode QR yang muncul pakai aplikasi DANA, OVO, GoPay, ShopeePay, atau m-banking. Selesaikan sebelum waktu habis (15 menit)."],
+["Pembayaran","Apakah ada biaya admin?","Biaya admin Rp 1.500 per transaksi. Pembayaran lewat Virtual Account dikenakan tambahan Rp 2.500."],
+["Transaksi Gagal","Transaksi saya pending, apa yang harus dilakukan?","Status pending biasanya selesai dalam 1–15 menit. Cek di halaman Cek Status. Jika lebih dari 1 jam, hubungi CS dengan nomor invoice."],
+["Transaksi Gagal","Saldo sudah terpotong tapi produk belum masuk","Simpan bukti pembayaran dan nomor invoice, lalu hubungi CS. Kami akan proses ulang atau refund maksimal 1x24 jam."],
+["Transaksi Gagal","Salah memasukkan nomor tujuan","Transaksi yang sudah berhasil ke nomor yang salah tidak bisa dibatalkan. Selalu cek ulang nomor di halaman detail pesanan sebelum membayar."],
+["Refund","Berapa lama proses refund?","Refund diproses maksimal 1x24 jam ke metode pembayaran asal setelah transaksi dinyatakan gagal."],
+["Refund","Bagaimana cara mengajukan refund?","Hubungi CS lewat WhatsApp atau formulir Kontak, sertakan nomor invoice dan bukti pembayaran."],
+["Token PLN","Token listrik belum masuk setelah bayar","Token tampil di struk dan halaman Cek Status. Jika belum muncul setelah 15 menit, hubungi CS dengan nomor invoice."],
+["Token PLN","Cara memasukkan token ke meteran","Tekan tombol pada meteran, masukkan 20 digit token, lalu tekan Enter. Pastikan nomor meter sesuai dengan yang kamu beli."],
+["Tagihan","Kapan tagihan bulanan bisa dibayar?","Tagihan PDAM, BPJS, internet, dan angsuran biasanya tersedia mulai tanggal 1 setiap bulan dan bisa dibayar sebelum jatuh tempo."],
+["Tagihan","Apakah bisa bayar BPJS untuk beberapa bulan?","Bisa, iuran BPJS Kesehatan dapat dibayar hingga 12 bulan sekaligus."],
+["Keamanan","Apakah data saya aman?","Semua transaksi dienkripsi dan kami tidak menyimpan data kartu atau PIN kamu."],
+["Keamanan","Ada yang mengaku CS meminta OTP","Itu penipuan. CS VENCORAGO tidak pernah meminta PIN, OTP, atau password. Laporkan ke WhatsApp resmi kami."]];
+let cur=null;
+topics.innerHTML=T.map(t=>`<div class="tp" data-t="${t[1]}"><div class="ico">${ic(t[0])}</div><div><b>${t[1]}</b><small>${t[2]}</small><em>${F.filter(f=>f[0]==t[1]).length} artikel</em></div></div>`).join("");
+faq.innerHTML=F.map(f=>`<details data-t="${f[0]}"><summary>${f[1]}</summary><p>${f[2]}</p></details>`).join("");
+document.querySelectorAll(".tp").forEach(e=>e.onclick=()=>{cur=cur==e.dataset.t?null:e.dataset.t;q.value="";filt();document.getElementById("ft").scrollIntoView({behavior:"smooth",block:"center"})});
+function filt(){const s=q.value.toLowerCase().trim();let n=0;document.querySelectorAll(".tp").forEach(e=>e.classList.toggle("on",e.dataset.t==cur));
+ document.querySelectorAll("#faq details").forEach(d=>{const ok=(!cur||d.dataset.t==cur)&&(!s||d.textContent.toLowerCase().includes(s));d.style.display=ok?"":"none";if(ok)n++;d.open=!!s&&ok&&n==1});
+ ft.textContent=s?`Hasil untuk "${q.value}"`:cur||"Semua pertanyaan";cnt.textContent=n+" pertanyaan";none.style.display=n?"none":"block"}
+function qs(v){q.value=v;cur=null;filt();ft.scrollIntoView({behavior:"smooth",block:"center"})}
+q.onkeydown=e=>{if(e.key=="Enter")filt()};q.oninput=filt;filt();
+</script></body></html>

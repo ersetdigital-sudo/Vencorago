@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cek Status Transaksi — VENCORAGO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0f5f5c;--teal2:#1a7a72;--gold:#b08a5a;--bg:#f7f4ee;--ink:#16302e;--mut:#6b7774;--line:#e7e1d6}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{background:#fff;border-bottom:1px solid var(--line)}.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display';font-size:22px;letter-spacing:1px}.logo b{color:var(--gold);font-size:28px}
+.menu{display:flex;gap:36px;font-size:14px;color:var(--mut)}.menu a.on{color:var(--ink);font-weight:600;border-bottom:2px solid var(--gold);padding-bottom:4px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:999px;padding:10px 20px;font:600 14px Inter;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+svg{width:1em;height:1em;vertical-align:middle}
+.hero{text-align:center;padding:60px 0 30px}.kick{color:var(--gold);letter-spacing:3px;font-size:12px;font-weight:600}
+h1{font-family:'DM Serif Display';font-size:48px;color:var(--teal);margin:10px 0}h1 em{color:var(--gold)}.hero p{color:var(--mut)}
+.box{max-width:640px;margin:0 auto;background:linear-gradient(90deg,var(--teal),var(--teal2));border-radius:18px;padding:22px;display:flex;gap:12px;box-shadow:0 20px 40px #0f5f5c33}
+.box input{flex:1;padding:14px;border:0;border-radius:10px;font:15px Inter;text-transform:uppercase}
+.gold{background:linear-gradient(90deg,#c8a175,#a9845a);color:#fff;border:0;border-radius:10px;padding:0 28px;font:600 14px Inter;cursor:pointer}
+.res{max-width:640px;margin:28px auto 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;animation:f .3s}@keyframes f{from{opacity:0;transform:translateY(8px)}}
+.head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px}
+.badge{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700}.success{background:#e3f4ec;color:#1f8f6c}.pending{background:#fbf1e1;color:#b4762c}.expired{background:#fbe6e4;color:#b8473c}
+.li{display:flex;justify-content:space-between;font-size:14px;padding:7px 0}.li span{color:var(--mut)}
+.tl{margin:20px 0 6px;border-left:2px solid var(--line);padding-left:20px}.tl div{position:relative;padding:0 0 16px;font-size:13px}.tl div:before{content:"";position:absolute;left:-27px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--line)}.tl div.on:before{background:var(--teal)}.tl small{display:block;color:var(--mut)}
+.sn{background:#f4f1ea;border-radius:10px;padding:14px;text-align:center;margin-top:10px}.sn b{font-size:18px;letter-spacing:1px}
+.empty{text-align:center;color:var(--mut);font-size:14px;padding:20px}
+h3{font-size:15px;margin:36px 0 12px}.hist a{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:8px;font-size:13px}.hist a:hover{border-color:var(--teal)}
+.acts{display:flex;gap:10px;margin-top:16px}.acts .btn{flex:1;border-radius:12px}.ghost{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:50px 0}
+@media(max-width:700px){.menu{display:none}h1{font-size:36px}.box{flex-direction:column}.gold{padding:14px}.acts{flex-direction:column}}
+.logo{font-family:Inter,sans-serif!important;gap:10px!important;letter-spacing:0!important}.lm{width:36px;height:36px;flex:none;filter:drop-shadow(0 4px 10px #0f5f5c40)}.lw{font:800 21px Inter,sans-serif;letter-spacing:-.8px;color:#16302e}.lw i{font-style:normal;color:#b08a5a}</style><script src="https://cdn.moda.app/runtime-libs/tailwind-browser-4.1.13-index.global.min.js"></script><style data-moda-export-fonts="true">@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-thinitalic.ttf") format("truetype"); font-style: italic; font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extralightitalic.ttf") format("truetype"); font-style: italic; font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-lightitalic.ttf") format("truetype"); font-style: italic; font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-mediumitalic.ttf") format("truetype"); font-style: italic; font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-semibolditalic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-bolditalic.ttf") format("truetype"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-extrabolditalic.ttf") format("truetype"); font-style: italic; font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-black.ttf") format("truetype"); font-style: normal; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("../../fonts/inter_24pt-blackitalic.ttf") format("truetype"); font-style: italic; font-weight: 900; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url("../../fonts/dmserifdisplay-italic.ttf") format("truetype"); font-style: italic; font-weight: 400; font-display: swap; }</style></head><body>
+<header><div class="wrap nav"><a class="logo" href="/"><svg class="lm" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a7a72"></stop><stop offset="1" stop-color="#0b4744"></stop></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#lg)"></rect><path d="M11 12l9 17 9-17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="29" cy="12" r="3.2" fill="#e4c9a2"></circle></svg><span class="lw">vencorago<i>.</i></span></a>
+<nav class="menu"><a href="/">Beranda</a><a href="/produk">Produk</a><a class="on" href="/status">Cek Status</a><a href="/cara-bayar">Cara Bayar</a><a href="/bantuan">Bantuan</a><a href="/kontak">Kontak</a></nav>
+<a class="btn" href="https://wa.me/6281234567890" target="_blank">Hubungi Kami</a></div></header>
+<main class="wrap">
+<section class="hero"><div class="kick">LACAK PESANAN KAMU</div><h1>Cek Status <em>Transaksi</em></h1><p>Masukkan nomor invoice untuk melihat status pembayaran dan pesanan.</p></section>
+<form class="box" id="f"><input id="q" placeholder="Contoh: VCR123456789" autocomplete="off"><button class="gold">Cek Status</button></form>
+<div class="res" id="res"></div>
+<div class="res" id="hist"></div>
+</main>
+<footer>© 2026 VENCORAGO. Butuh bantuan? <a href="https://wa.me/6281234567890" style="color:var(--teal);font-weight:600">Chat WhatsApp</a></footer>
+<script>
+const rp=n=>"Rp "+n.toLocaleString("id-ID"),dt=t=>new Date(t).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"});
+const db=()=>JSON.parse(localStorage.getItem('vcr_tx')||'{}');
+const LBL={success:"Berhasil",pending:"Menunggu Pembayaran",expired:"Kedaluwarsa"};
+function stat(t){if(t.status=="pending"&&Date.now()-t.time>15*60e3)return"expired";return t.status}
+function find(inv){inv=inv.trim().toUpperCase();if(!inv)return;history.replaceState(null,"","?inv="+inv);q.value=inv;
+ const t=db()[inv];if(!t){res.innerHTML=`<div class="card empty"><b style="color:var(--ink)">Invoice tidak ditemukan</b><br>Pastikan nomor invoice benar, atau hubungi CS kami.</div>`;return}
+ const s=stat(t);
+ res.innerHTML=`<div class="card"><div class="head"><div><small style="color:var(--mut)">No. Invoice</small><br><b style="font-size:18px">${t.inv}</b></div><span class="badge ${s}">${LBL[s]}</span></div>
+ <div class="li"><span>Produk</span><b>${t.prod}</b></div><div class="li"><span>No. Pelanggan</span><b>${t.no}</b></div><div class="li"><span>Nama</span><b>${t.name}</b></div><div class="li"><span>Metode</span><b>${t.pm}</b></div><div class="li"><span>Total</span><b style="color:var(--teal)">${rp(t.total)}</b></div>
+ <div class="tl"><div class="on">Pesanan dibuat<small>${dt(t.time)}</small></div>
+ <div class="${s=='success'?'on':''}">${s=='expired'?'Batas waktu pembayaran habis':'Pembayaran diterima'}<small>${s=='success'?dt(t.paid):s=='expired'?dt(t.time+15*60e3):'Menunggu pembayaran...'}</small></div>
+ <div class="${s=='success'?'on':''}">Pesanan selesai diproses<small>${s=='success'?dt(t.paid):'-'}</small></div></div>
+ ${s=='success'&&t.sn?`<div class="sn"><small>${t.cat=="Token PLN"?"Token Listrik":"Serial Number"}</small><br><b>${t.sn}</b></div>`:''}
+ <div class="acts">${s=='success'?'':`<a class="btn" href="/">Buat Pesanan Baru</a>`}<a class="btn ghost" target="_blank" href="https://wa.me/6281234567890?text=Halo%20VENCORAGO,%20saya%20mau%20tanya%20invoice%20${t.inv}">Tanya CS</a></div></div>`}
+f.onsubmit=e=>{e.preventDefault();find(q.value)};
+const all=Object.values(db()).sort((a,b)=>b.time-a.time).slice(0,5);
+if(all.length)hist.innerHTML="<h3>Transaksi terakhir di perangkat ini</h3><div class='hist'>"+all.map(t=>{const s=stat(t);return`<a href="?inv=${t.inv}" onclick="event.preventDefault();find('${t.inv}');scrollTo({top:0,behavior:'smooth'})"><span><b>${t.inv}</b><br><small style="color:var(--mut)">${t.prod} · ${rp(t.total)}</small></span><span class="badge ${s}">${LBL[s]}</span></a>`}).join("")+"</div>";
+const p=new URLSearchParams(location.search).get("inv");if(p)find(p);
+</script></body></html>
