@@ -298,7 +298,8 @@
   align-items: center;
   font-weight: 700;
 }
-.pg .prod button {
+.pg .prod button,
+.pg .prod a {
   padding: 7px 14px;
   border-radius: 8px;
 }
@@ -338,7 +339,8 @@
 .pg .tot b {
   font-size: 24px;
 }
-.pg .prod button svg {
+.pg .prod button svg,
+.pg .prod a svg {
   width: 15px;
   height: 15px;
 }
@@ -626,6 +628,14 @@
   border: 8px solid #fff;
   outline: 1px solid var(--line);
   background: #fff;
+}
+/* Foto QRIS dari Supabase Storage (kalau admin sudah unggah) */
+.pg .qrbox .q img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
 }
 .pg .va {
   background: #f4f1ea;

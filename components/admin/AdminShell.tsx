@@ -13,6 +13,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/transaksi", label: "Transaksi", icon: "receipt" },
   { href: "/admin/pelanggan", label: "Pelanggan", icon: "users" },
   { href: "/admin/produk", label: "Produk", icon: "box" },
+  { href: "/admin/pengaturan", label: "Pengaturan", icon: "settings" },
 ];
 
 const isActive = (href: string, pathname: string) =>
@@ -42,7 +43,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              <circle cx="29" cy="12" r="3.2" fill="#e4c9a2" />
+              <circle cx="29" cy="12" r="3.2" fill="#a7f0e2" />
             </svg>
           </Link>
           {NAV.map((n) => (

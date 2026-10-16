@@ -2,48 +2,48 @@
    VENCORAGO admin — design system
    Structure: needmcp DNA "ablepro-dna" (rail+panel sidebar, sticky utility
    strip, equal-card canvas, KPI units, ledger table, segmented toggle).
-   Skin: needmcp premium style "amber-atrium" (dark-first espresso void,
-   amber action color, glass panels, Outfit + JetBrains Mono).
+   Skin: dark-first teal (cool slate-teal void, teal action color aligned with
+   the brand teal of the public site, glass panels, Outfit + JetBrains Mono).
    Tokens are scoped to .admin so the public site is untouched.
    =========================================================================== */
 
 .admin {
-  --void: #14100c;
-  --void-2: #1a150e;
-  --bone: #2a2013;
-  --surface: #1e1812;
-  --surface-hover: #251d15;
-  --fg: #f4e9da;
-  --fg-secondary: #c9b49a;
-  --fg-muted: #a08f79;
-  --border: #3a2e1f;
-  --divider: #2c2318;
-  --hairline: rgba(232, 165, 75, 0.12);
+  --void: #0b1416;
+  --void-2: #0f1a1c;
+  --bone: #1b2a2c;
+  --surface: #121e20;
+  --surface-hover: #1a282a;
+  --fg: #e8f3f2;
+  --fg-secondary: #a9c2c0;
+  --fg-muted: #7c9694;
+  --border: #24403e;
+  --divider: #1a2b2a;
+  --hairline: rgba(47, 191, 174, 0.12);
 
-  --primary: #e8a54b;
-  --primary-hover: #f2b55e;
-  --primary-active: #f7c577;
-  --on-primary: #1a1206;
-  --primary-bg: rgba(232, 165, 75, 0.15);
-  --primary-muted: rgba(232, 165, 75, 0.25);
+  --primary: #2fbfae;
+  --primary-hover: #45cfbd;
+  --primary-active: #5fdbcb;
+  --on-primary: #04221e;
+  --primary-bg: rgba(47, 191, 174, 0.15);
+  --primary-muted: rgba(47, 191, 174, 0.28);
 
-  --ok-bg: #1c2e20;
-  --ok-text: #9ad4a9;
-  --warn-bg: #3e331f;
-  --warn-text: #eccc8c;
-  --bad-bg: #3a1f18;
-  --bad-text: #f0a897;
-  --info-bg: #2d3134;
-  --info-text: #adc3d6;
+  --ok-bg: #14301f;
+  --ok-text: #86d99a;
+  --warn-bg: #3a2415;
+  --warn-text: #f2a56a;
+  --bad-bg: #381d1c;
+  --bad-text: #ef9f9b;
+  --info-bg: #16292f;
+  --info-text: #9fc4d4;
 
-  --glass-panel: rgba(48, 36, 20, 0.62);
-  --glass-border: rgba(232, 165, 75, 0.18);
-  --glass-input: rgba(48, 36, 20, 0.5);
+  --glass-panel: rgba(23, 44, 44, 0.62);
+  --glass-border: rgba(47, 191, 174, 0.18);
+  --glass-input: rgba(23, 44, 44, 0.5);
   --blur: 24px;
 
-  --elev1: 0 4px 24px rgba(10, 7, 4, 0.45);
-  --elev2: 0 12px 48px rgba(10, 7, 4, 0.55);
-  --glow: 0 0 60px rgba(232, 165, 75, 0.22);
+  --elev1: 0 4px 24px rgba(3, 10, 11, 0.45);
+  --elev2: 0 12px 48px rgba(3, 10, 11, 0.55);
+  --glow: 0 0 60px rgba(47, 191, 174, 0.22);
 
   --r-xs: 6px;
   --r-sm: 10px;
@@ -301,7 +301,7 @@
   gap: var(--sp-md);
   height: 60px;
   padding: 0 var(--sp-lg);
-  background: rgba(20, 16, 12, 0.72);
+  background: rgba(11, 20, 22, 0.72);
   -webkit-backdrop-filter: blur(var(--blur)) saturate(160%);
   backdrop-filter: blur(var(--blur)) saturate(160%);
   border-bottom: 1px solid var(--divider);
@@ -690,6 +690,129 @@
   font-size: 13px;
 }
 
+/* -------------------------------------------------- pengaturan (foto qris) --- */
+
+.qrisPreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: var(--sp-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.qrisImg {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--elev1);
+}
+
+.qrisForm {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--sp-md);
+}
+
+.qrisLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  margin-bottom: 6px;
+}
+
+.qrisPin {
+  max-width: 260px;
+}
+
+.qrisActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  flex-wrap: wrap;
+  margin-top: var(--sp-md);
+}
+
+.qrisPick {
+  cursor: pointer;
+}
+
+.qrisFile {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qrisMsg {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.qrisMsgOk {
+  color: var(--ok-text);
+}
+
+.qrisMsgBad {
+  color: var(--bad-text);
+}
+
+.qrisHint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.qrisHint b {
+  color: var(--fg-secondary);
+  font-weight: 600;
+}
+
+.qrisMeta {
+  display: grid;
+  gap: 10px;
+}
+
+.qrisMetaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+.qrisMetaRow b {
+  color: var(--fg);
+  font-weight: 600;
+  text-align: right;
+}
+
+.qrisNote {
+  margin: 4px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--hairline);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.qrisNote b {
+  color: var(--fg-secondary);
+  font-weight: 600;
+}
+
 /* --------------------------------------------------------------- pages --- */
 
 .pageHead {
@@ -844,14 +967,14 @@
   display: flex;
   align-items: flex-end;
   border-radius: var(--r-xs);
-  background: linear-gradient(180deg, transparent, rgba(232, 165, 75, 0.05));
+  background: linear-gradient(180deg, transparent, rgba(47, 191, 174, 0.05));
 }
 
 .barFill {
   width: 100%;
   min-height: 2px;
   border-radius: var(--r-xs) var(--r-xs) 0 0;
-  background: linear-gradient(180deg, var(--primary), rgba(232, 165, 75, 0.45));
+  background: linear-gradient(180deg, var(--primary), rgba(47, 191, 174, 0.45));
   transition: filter var(--dur-fast);
 }
 
@@ -1175,10 +1298,10 @@
     inset: auto 0 0 0;
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 2px;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: rgba(20, 16, 12, 0.92);
+    background: rgba(11, 20, 22, 0.92);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     backdrop-filter: blur(18px) saturate(160%);
     border-top: 1px solid var(--divider);
@@ -1211,7 +1334,7 @@
     font-weight: 700;
   }
   .bottomItem[aria-current="page"] svg {
-    filter: drop-shadow(0 0 12px rgba(232, 165, 75, 0.45));
+    filter: drop-shadow(0 0 12px rgba(47, 191, 174, 0.45));
   }
 }
 

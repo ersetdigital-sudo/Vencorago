@@ -97,9 +97,9 @@ dashboard bukan data bisnis nyata sampai ada API + database.
   utility strip (breadcrumb + search + bell + cluster akun), kanvas kartu rata (max 1600px, padding
   24, gap 24/16/12), KPI unit, ledger table, segmented period toggle, linear progress track. Di
   mobile shell-nya runtuh jadi bottom bar dengan item, urutan, dan active state yang sama.
-- **Kulit** — style premium `amber-atrium`: dark-first espresso void `#14100C`, aksen amber
-  `#E8A54B`, panel kaca (blur 24px), Outfit untuk UI + JetBrains Mono untuk angka/ID, radius
-  6/10/12/16, elevation level-1, glow hanya di elemen aktif.
+- **Kulit** — dark-first teal: void slate-teal `#0B1416`, aksen teal `#2FBFAE` yang selaras
+  dengan teal brand situs publik, panel kaca (blur 24px), Outfit untuk UI + JetBrains Mono untuk
+  angka/ID, radius 6/10/12/16, elevation level-1, glow hanya di elemen aktif.
 - Semua tokennya di-scope di `.admin` (`components/admin/admin.module.css`), jadi situs publik tidak
   tersentuh — sudah diverifikasi ulang dengan sidik jari DOM setelah pengerjaan admin.
 - Konflik aturan yang diselesaikan sadar: radius kartu 16px + padding 20px (Style pegang nilai
@@ -110,6 +110,56 @@ dashboard bukan data bisnis nyata sampai ada API + database.
 
 **Belum ada auth.** `/admin` masih terbuka untuk umum (hanya diberi `robots: noindex`). Jangan
 deploy ke publik sebelum diberi proteksi: middleware + login, atau basic auth di level platform.
+
+## Integrasi Supabase (foto QRIS)
+
+Foto QRIS disimpan di **Supabase Storage** (bucket `qris`), jadi admin bisa mengganti gambar QR
+dari `/admin/pengaturan` tanpa menyentuh kode — dan foto lama otomatis terhapus saat diganti.
+
+### Setup (sekali saja)
+
+1. Buat/buka project di [supabase.com](https://supabase.com) → **SQL Editor** → jalankan file
+   [`supabase/setup-qris.sql`](supabase/setup-qris.sql) (membuat bucket `qris` + kebijakan RLS).
+2. Salin `.env.example` menjadi `.env.local`, lalu isi:
+   - `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` — dari
+     **Project Settings → API**: pakai key **publishable** (atau key **anon / public** lama).
+     Jangan pernah memakai **secret / service_role** — key itu melewati RLS.
+   - `ADMIN_PIN` — PIN untuk mengganti/menghapus foto di halaman admin.
+3. Restart `npm run dev`.
+
+Tanpa env di langkah 2, semua endpoint membalas `not-configured` dan situs tetap memakai QR
+placeholder seperti sebelumnya (tidak ada error di UI).
+
+### Cara kerja
+
+| Bagian | Peran |
+| ------ | ----- |
+| `app/api/qris/route.ts` | `GET` = foto aktif; `POST` = unggah pengganti; `DELETE` = hapus. Aksi tulis dicek `ADMIN_PIN` di server (perbandingan timing-safe), tidak pernah dikirim ke browser. |
+| `lib/qris.ts` | helper client `fetchQris()` — hanya menerima URL publik. |
+| `components/admin/PengaturanView.tsx` | UI admin: preview, ganti, hapus foto (dengan PIN). |
+| `components/home/HomeView.tsx` | kotak **Scan QRIS** di langkah bayar memakai foto dari Storage; kalau belum ada foto, tetap `QrSvg` placeholder. |
+
+**Anti-numpuk:** setiap unggahan memakai nama file `qris-<timestamp>.<ext>` (URL selalu baru,
+aman dari cache CDN), lalu **semua file lain dihapus** — jadi di bucket selalu ada maksimal satu
+foto QRIS. Upload dulu → hapus lama, supaya tidak ada jeda tanpa QRIS. Kalau proses hapus gagal,
+foto baru tetap aktif dan sisa file dibersihkan otomatis di unggahan berikutnya (UI memberi
+peringatan).
+
+**Batasan keamanan (penting):** kebijakan storage mengizinkan role `anon` mengunggah/hapus di
+dalam bucket `qris`, dan upload admin memakai anon key lewat server dengan penguncian PIN.
+Ini cukup untuk demo/prototype, **bukan** keamanan produksi — untuk produksi tambahkan Supabase
+Auth untuk admin (upload lewat session token) atau proteksi di level platform. Lihat juga catatan
+auth di bagian Admin dashboard.
+
+### Verifikasi manual setelah setup
+
+1. `/admin/pengaturan` → kartu Koneksi menampilkan **Terhubung** + `qris · publik`.
+2. Masukkan PIN, pilih gambar PNG/JPG/WebP (≤5 MB), klik **Unggah & ganti** → muncul pesan sukses;
+   cek isi bucket di Supabase → hanya tersisa 1 file.
+3. Buka `/` → pilih produk → **Bayar Sekarang** dengan metode QRIS → kotak scan menampilkan foto
+   yang baru diunggah (bukan placeholder).
+4. Ganti foto sekali lagi → file sebelumnya hilang dari bucket, tampilan ikut berganti.
+5. **Hapus foto** → checkout kembali menampilkan QR placeholder.
 
 ## Catatan penting supaya tampilan tetap sama persis (desktop)
 
@@ -147,11 +197,30 @@ jangan diubah tanpa mengecek ulang tampilannya.
 ## Data transaksi
 
 Riwayat transaksi disimpan di `localStorage` dengan key `vcr_tx` (ditulis di halaman beranda,
-dibaca di halaman Cek Status). Struktur record sama seperti versi asli:
+dibaca di halaman Cek Status dan dashboard admin). Struktur record sama seperti versi asli:
 `{ inv, prod, cat, no, name, pm, total, status, sn, time, paid }`.
+
+`total` memakai satu rumus yang sama di tiga tempat — checkout beranda (`totalOf()` di
+`components/home/HomeView.tsx`), ringkasan halaman `/produk`, dan data demo admin
+(`components/admin/data.ts`):
+
+```
+total = nominal + margin produk + biaya admin Rp 1.500 + biaya metode (kalau ada)
+```
+
+Margin produk mengikuti `N()` di `components/produk/data.ts`: Rp 1.000 untuk nominal di bawah
+Rp 20.000, Rp 500 sisanya. Kategori tagihan (PDAM, BPJS, Internet & TV, Multifinance) tidak kena
+margin karena angka yang dibayar adalah tagihannya. Halaman `/produk` belum bisa menampilkan biaya
+metode (metode dipilih di checkout beranda), jadi totalnya sama persis dengan checkout hanya untuk
+metode tanpa biaya tambahan — QRIS dan DANA.
 
 ## Yang belum diubah
 
 - Nomor WhatsApp (`6281234567890`), email, alamat, dan link Instagram masih memakai data contoh
   dari versi asli.
 - Nominal tagihan (PDAM, BPJS, internet, multifinance) masih statis; belum ada integrasi backend.
+- **Tangga nominal** (pulsa, top up e-wallet, token PLN) adalah daftar placeholder tingkat aplikasi
+  di `components/produk/data.ts` (`NOMINAL_PULSA`, `NOMINAL_TOPUP`, `NOMINAL_TOKEN`) — bukan hasil
+  verifikasi supplier. Tidak ada SKU, product ID, harga modal, atau harga promo di proyek ini. Saat
+  feed supplier tersedia, ganti konstantanya; jangan menambah nominal langsung di dalam `ops`
+  supaya katalog tetap satu sumber antara halaman produk dan quick-pick beranda.

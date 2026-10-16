@@ -100,6 +100,20 @@ const SV = {
     </>
   ),
   trend: <path d="M4 16.5 9.5 11l3.5 3.5L20 7.5" />,
+  upload: (
+    <>
+      <path d="M12 19V4" />
+      <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
+      <path d="M4 20h16" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof SV;

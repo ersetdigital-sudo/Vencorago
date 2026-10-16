@@ -6,6 +6,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Logo from "@/components/Logo";
 import s from "./home.module.css";
+import { K, checkNumber, normalizeNumber, nominalsOf } from "@/components/produk/data";
+import { fetchQris } from "@/lib/qris";
 
 const SV = {
   chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
@@ -120,17 +122,25 @@ const ADMIN = 1500;
 const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
 const NAMES = ["Budi Santoso", "Siti Rahma", "Andi Pratama", "Dewi Lestari"];
 
+/* Ikon dan teks singkat khusus beranda; daftar nominalnya diturunkan dari
+   katalog di components/produk/data.ts supaya pilihan cepat di sini tidak
+   menyimpang dari halaman produk. Kategori paket dan tagihan tidak punya
+   nominal tetap, jadi pilihannya diarahkan ke halaman produk. */
 type Cat = [string, string, string, number[] | null];
-const C: Cat[] = [
-  ["phone", "Pulsa", "Pulsa semua operator", [5e3, 1e4, 25e3, 5e4, 1e5]],
-  ["wifi", "Paket Data", "Internet lebih hemat", [25e3, 5e4, 75e3, 1e5]],
-  ["zap", "Token PLN", "Listrik prabayar", [2e4, 5e4, 1e5, 2e5, 5e5]],
-  ["drop", "PDAM", "Tagihan air daerah", null],
-  ["shield", "BPJS Kesehatan", "Bayar lebih mudah", null],
-  ["tv", "Internet & TV", "IndiHome, First, dll", null],
-  ["wallet", "E-Wallet", "DANA, OVO, GoPay", [2e4, 5e4, 1e5, 2e5]],
-  ["bank", "Multifinance", "Angsuran kendaraan", null],
+const TILES: [string, string, string][] = [
+  ["phone", "Pulsa", "Pulsa semua operator"],
+  ["wifi", "Paket Data", "Internet lebih hemat"],
+  ["zap", "Token PLN", "Listrik prabayar"],
+  ["drop", "PDAM", "Tagihan air daerah"],
+  ["shield", "BPJS Kesehatan", "Bayar lebih mudah"],
+  ["tv", "Internet & TV", "IndiHome, First, dll"],
+  ["wallet", "E-Wallet", "DANA, OVO, GoPay"],
+  ["bank", "Multifinance", "Angsuran kendaraan"],
 ];
+const C: Cat[] = TILES.map(([icon, name, desc]) => {
+  const noms = K[name]?.kind == "nominal" ? nominalsOf(name) : [];
+  return [icon, name, desc, noms.length ? noms : null];
+});
 
 const BILL: Record<string, number> = {
   PDAM: 87500,
@@ -139,13 +149,19 @@ const BILL: Record<string, number> = {
   Multifinance: 1250000,
 };
 
-type Prod = [string, string, number, string];
+/* [icon, nama produk, nominal, kategori (param k), operator (param op)] */
+type Prod = [string, string, number, string, string];
 const P: Prod[] = [
-  ["wallet", "Saldo DANA", 1e5, "E-Wallet"],
-  ["phone", "Pulsa Telkomsel", 25e3, "Pulsa"],
-  ["zap", "Token PLN", 5e4, "Token PLN"],
-  ["wallet", "Saldo OVO", 2e5, "E-Wallet"],
+  ["wallet", "Saldo DANA", 1e5, "E-Wallet", "DANA"],
+  ["phone", "Pulsa Telkomsel", 25e3, "Pulsa", "Telkomsel"],
+  ["zap", "Token PLN", 5e4, "Token PLN", "PLN Prabayar"],
+  ["wallet", "Saldo OVO", 2e5, "E-Wallet", "OVO"],
 ];
+
+/* Kartu produk mengarah ke halaman detail `/produk` dengan operator dan nominal
+   yang sudah terpilih, bukan quick-pick di checkout halaman ini. */
+const detailHref = (p: Prod) =>
+  `/produk?k=${encodeURIComponent(p[3])}&op=${encodeURIComponent(p[4])}&h=${p[2]}`;
 
 type PayMethod = [string, string, string, number];
 const PM: PayMethod[] = [
@@ -179,6 +195,21 @@ const STEP: Record<View, number> = {
 };
 
 const catOf = (n: string | null | undefined) => C.find((c) => c[1] === n);
+
+/* Margin produk — rumus yang sama dengan components/produk/data.ts (N()): nominal
+   di bawah Rp 20.000 kena Rp 1.000, sisanya Rp 500. Kategori tagihan (nominalnya
+   null) tidak pakai margin karena angka yang dibayar adalah tagihannya. */
+const margin = (v: number) => (v < 2e4 ? 1000 : 500);
+
+/* Yang dibayar pelanggan: harga produk (nominal + margin) + biaya metode + biaya
+   admin. Ini rumus yang dipakai halaman detail produk dan data demo di admin,
+   jadi checkout di sini harus menghasilkan angka yang sama. */
+function totalOf(h: number, cat: string | null | undefined, pm: number) {
+  /* Belum ada produk yang dipilih berarti belum ada yang dibayar. */
+  if (!h) return { margin: 0, total: 0 };
+  const m = catOf(cat)?.[3] && h ? margin(h) : 0;
+  return { margin: m, total: h + m + PM[pm][3] + ADMIN };
+}
 
 function QrSvg() {
   const rects: ReactNode[] = [];
@@ -220,13 +251,16 @@ function seedState(k: string, h: string, p: string, no: string): Seed {
   if (!no) return { st: base, view: "pick", sel: k, num: "", toast: "" };
   if (c[3] && !hNum)
     return { st: base, view: "pick", sel: k, num: no, toast: "Pilih nominal dulu" };
-  if (no.replace(/\D/g, "").length < 8)
-    return { st: base, view: "pick", sel: k, num: no, toast: "Nomor pelanggan minimal 8 digit" };
+  const bad = checkNumber(k, no);
+  if (bad) return { st: base, view: "pick", sel: k, num: no, toast: bad };
+  const noNorm = normalizeNumber(no);
   return {
-    st: { ...base, h: c[3] ? hNum : BILL[k], no, name: NAMES[no.length % 4] },
+    /* Kategori tagihan memakai nominal contoh dari BILL; kategori paket sudah
+       membawa harga paketnya sendiri dari halaman produk. */
+    st: { ...base, h: c[3] ? hNum : (BILL[k] ?? hNum), no: noNorm, name: NAMES[noNorm.length % 4] },
     view: "loading",
     sel: k,
-    num: no,
+    num: noNorm,
     toast: "",
   };
 }
@@ -255,11 +289,27 @@ export default function HomeView({
   const asideRef = useRef<HTMLElement>(null);
   const numRef = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const qrisTried = useRef(false);
+
+  const [qrisUrl, setQrisUrl] = useState<string | null>(null);
+
+  /* Foto QRIS dari Supabase baru diambil saat user masuk langkah bayar (bukan
+     saat halaman dibuka). Kalau belum ada foto atau Supabase belum terhubung,
+     tetap pakai QR placeholder seperti semula. */
+  useEffect(() => {
+    if (view !== "pay" || qrisTried.current) return;
+    qrisTried.current = true;
+    fetchQris().then((r) => {
+      if (r.url) setQrisUrl(r.url);
+    });
+  }, [view]);
 
   const cat = catOf(st.cat);
+  const catKind = K[st.cat]?.kind;
+  const price = totalOf(st.h, st.cat, st.pm);
   const pmFee = PM[st.pm][3] + ADMIN;
   const step = STEP[view];
-  const total = rp(st.h + pmFee);
+  const total = rp(price.total);
 
   function toast(t: string) {
     setToastMsg(t);
@@ -277,6 +327,9 @@ export default function HomeView({
     if (!name) return start();
     setSel(name);
     setSt({ ...EMPTY, cat: name, h: h || 0, prod: name });
+    /* Nomor tujuan tidak boleh tertinggal dari kategori sebelumnya: nomor HP
+       tidak berlaku sebagai nomor kontrak atau ID pelanggan. */
+    if (name != st.cat) setNum("");
     setView("pick");
     searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -285,25 +338,19 @@ export default function HomeView({
     setSt((prev) => ({ ...prev, h: v }));
   }
 
-  function buy(i: number) {
-    const p = P[i];
-    pick(p[3], p[2]);
-    setSt((prev) => ({ ...prev, prod: p[1] }));
-    toast(p[1] + " dipilih, masukkan nomor tujuan");
-    numRef.current?.focus();
-  }
-
   function cek() {
     const c = catOf(st.cat);
     if (!c) return toast("Pilih produk dulu ya");
+    if (K[st.cat]?.kind == "paket") return toast("Paket data dipilih dari halaman Produk");
     if (c[3] && !st.h) return toast("Pilih nominal dulu");
-    if (num.replace(/\D/g, "").length < 8) return toast("Nomor pelanggan minimal 8 digit");
-    const no = num;
+    const bad = checkNumber(st.cat, num);
+    if (bad) return toast(bad);
+    const no = normalizeNumber(num);
     setView("loading");
     setTimeout(() => {
       setSt((prev) => ({
         ...prev,
-        h: c[3] ? prev.h : BILL[c[1]],
+        h: c[3] ? prev.h : (BILL[c[1]] ?? prev.h),
         no,
         name: NAMES[no.length % 4],
         pm: 0,
@@ -326,7 +373,7 @@ export default function HomeView({
       no: cur.no,
       name: cur.name,
       pm: PM[cur.pm][1],
-      total: cur.h + PM[cur.pm][3] + ADMIN,
+      total: totalOf(cur.h, cur.cat, cur.pm).total,
       status,
       sn: cur.sn || "",
       time: d[cur.inv]?.time || Date.now(),
@@ -359,7 +406,7 @@ export default function HomeView({
   }
 
   function wa() {
-    const m = `Halo VENCORAGO, transaksi saya:%0AInvoice: ${st.inv}%0AProduk: ${st.prod}%0ANomor: ${st.no}%0ATotal: ${rp(st.h + pmFee)}%0ASN: ${st.sn}`;
+    const m = `Halo VENCORAGO, transaksi saya:%0AInvoice: ${st.inv}%0AProduk: ${st.prod}%0ANomor: ${st.no}%0ATotal: ${total}%0ASN: ${st.sn}`;
     window.open(`https://wa.me/${WA}?text=${m}`, "_blank");
   }
 
@@ -563,7 +610,7 @@ export default function HomeView({
           </div>
           <h2 style={{ marginTop: 0 }}>Paling sering dibeli.</h2>
           <div className={s.prods}>
-            {P.map((p, i) => (
+            {P.map((p) => (
               <div className={s.prod} key={p[1]}>
                 <div className={s.t}>
                   <span className={s.pi}>
@@ -577,10 +624,10 @@ export default function HomeView({
                 </div>
                 <span className={s.tag}>Harga bersaing</span>
                 <div className={s.row}>
-                  {rp(p[2] + 500)}
-                  <button className={s.btn} onClick={() => buy(i)}>
+                  {rp(p[2] + margin(p[2]))}
+                  <Link className={s.btn} href={detailHref(p)} aria-label={`Beli ${p[1]} — buka halaman detail produk`}>
                     <Ic n="cart" /> Beli
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -621,7 +668,7 @@ export default function HomeView({
                   </div>
                   {cat[3] ? (
                     <>
-                      <div className={s.lbl}>Pilih nominal</div>
+                      <div className={s.lbl}>{K[st.cat]?.nomLabel || "Pilih nominal"}</div>
                       <div className={s.noms}>
                         {cat[3].map((v) => (
                           <div
@@ -630,19 +677,31 @@ export default function HomeView({
                             onClick={() => pickNominal(v)}
                           >
                             <b>{rp(v)}</b>
-                            <small>Harga {rp(v + (v < 2e4 ? 1000 : 500))}</small>
+                            <small>Harga {rp(v + margin(v))}</small>
                           </div>
                         ))}
                       </div>
                     </>
+                  ) : catKind == "paket" ? (
+                    <p style={{ fontSize: 13, color: "var(--mut)", margin: "12px 0" }}>
+                      Paket data dipilih per paket beserta masa aktifnya di halaman produk.{" "}
+                      <Link
+                        href={`/produk?k=${encodeURIComponent(st.cat)}`}
+                        style={{ color: "var(--teal)", fontWeight: 600 }}
+                      >
+                        Lihat daftar paket →
+                      </Link>
+                    </p>
                   ) : (
                     <p style={{ fontSize: 13, color: "var(--mut)", margin: "12px 0" }}>
                       Tagihan akan dicek otomatis setelah kamu memasukkan nomor pelanggan.
                     </p>
                   )}
-                  <button className={`${s.btn} ${s.full}`} onClick={cek}>
-                    Lanjut Cek Tagihan →
-                  </button>
+                  {catKind != "paket" ? (
+                    <button className={`${s.btn} ${s.full}`} onClick={cek}>
+                      Lanjut Cek Tagihan →
+                    </button>
+                  ) : null}
                 </>
               )}
 
@@ -671,14 +730,23 @@ export default function HomeView({
                     <span>Produk</span>
                     <b>{st.prod}</b>
                   </div>
+                  {cat?.[3] && st.prod == st.cat ? (
+                    <div className={s.li}>
+                      <span>Nominal</span>
+                      <b>{rp(st.h)}</b>
+                    </div>
+                  ) : null}
                   <div className={s.li}>
                     <span>No. Pelanggan</span>
                     <b>{st.no}</b>
                   </div>
                   <div className={s.li}>
-                    <span>{BILL[st.cat] ? "Tagihan" : "Nominal"}</span>
-                    <b>{rp(st.h)}</b>
+                    <span>{BILL[st.cat] ? "Tagihan (contoh)" : "Harga"}</span>
+                    <b>{rp(st.h + price.margin)}</b>
                   </div>
+                  <small style={{ display: "block", fontSize: 11, color: "var(--mut)", marginTop: 2 }}>
+                    Nama pelanggan di atas masih data contoh; pengecekan ke penyedia belum terhubung.
+                  </small>
                   <div className={s.li}>
                     <span>Biaya admin</span>
                     <b>{rp(pmFee)}</b>
@@ -727,7 +795,17 @@ export default function HomeView({
                     <div className={s.qrbox}>
                       <b>Scan QRIS</b>
                       <div className={s.q}>
-                        <QrSvg />
+                        {qrisUrl ? (
+                          <img
+                            className={s.qImg}
+                            src={qrisUrl}
+                            alt="QRIS VENCORAGO"
+                            width={154}
+                            height={154}
+                          />
+                        ) : (
+                          <QrSvg />
+                        )}
                       </div>
                       <small style={{ color: "var(--mut)" }}>
                         Bayar pakai DANA, OVO, GoPay, ShopeePay atau m-banking
@@ -807,6 +885,12 @@ export default function HomeView({
                     <span>Produk</span>
                     <b>{st.prod}</b>
                   </div>
+                  {cat?.[3] && st.prod == st.cat ? (
+                    <div className={s.li}>
+                      <span>Nominal</span>
+                      <b>{rp(st.h)}</b>
+                    </div>
+                  ) : null}
                   <div className={s.li}>
                     <span>Pelanggan</span>
                     <b>{st.name}</b>
