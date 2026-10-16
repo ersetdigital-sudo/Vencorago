@@ -33,15 +33,24 @@ app/
   layout.tsx            # <html lang="id">, metadata title, import globals.css
   globals.css           # variabel warna, reset, @font-face, import Tailwind Preflight
   page.tsx              # /           (server: metadata + searchParams -> HomeView)
-  produk/page.tsx       # /produk     (+ components/produk/data.ts untuk generateMetadata)
+  produk/page.tsx       # /produk     (+ katalog dari lib/catalog.server.ts untuk generateMetadata)
   status/page.tsx       # /status
   cara-bayar/page.tsx   # /cara-bayar
   bantuan/page.tsx      # /bantuan
   kontak/page.tsx       # /kontak
+  api/tx/route.ts       # satu-satunya pintu ke tabel transactions
+  api/catalog/route.ts  # satu-satunya pintu tulis katalog (sesi admin)
+  admin/(dasbor)/       # dashboard: ringkasan, transaksi, produk, katalog, pengaturan
 components/
   Header.tsx, Logo.tsx  # dipakai ulang semua halaman
+  KatalogKosong.tsx     # pesan kalau katalog tidak bisa dibaca (tanpa data cadangan)
   home/                 # HomeView.tsx (wizard 4 langkah) + home.module.css
   produk/  status/  cara-bayar/  bantuan/  kontak/
+  admin/                # panel admin (KatalogView.tsx = editor katalog)
+lib/
+  catalog.ts            # tipe + aturan katalog (aman untuk komponen client)
+  catalog.server.ts     # pembaca katalog dari Supabase (server, di-cache tag `katalog`)
+supabase/               # SQL: setup + seed untuk qris, transaksi, dan katalog
 ```
 
 ## Mobile (app shell)
@@ -84,7 +93,9 @@ Route `/admin` — console operasional untuk memantau performa transaksi.
 
 Halaman: `/admin` (ringkasan, KPI, grafik 7/14/30 hari), `/admin/transaksi` (ledger + filter status +
 pencarian + paginasi + detail baris), `/admin/produk`
-(per kategori, produk, metode bayar). Setiap halaman punya ekspor CSV.
+(per kategori, produk, metode bayar — rekap penjualan, dengan ekspor CSV), `/admin/katalog`
+(editor katalog: kategori, penyedia, produk + harga, metode bayar, setelan), dan `/admin/pengaturan`
+(foto QRIS).
 
 **Sumber datanya.** Order disimpan di tabel `transactions` Supabase dan diakses lewat route server
 `/api/tx` (kunci `SUPABASE_SERVICE_ROLE_KEY`, tidak pernah ke browser) — jadi order dari HP
@@ -118,6 +129,7 @@ dialihkan ke `/admin/login` (halaman form password, `robots: noindex`).
 | Proxy | `proxy.ts` | jalur cepat: `/admin/*` tanpa sesi → redirect ke `/admin/login?next=…`; `POST`/`DELETE /api/qris` → `401`. `GET /api/qris` tetap publik karena checkout butuh URL foto. |
 | Layout | `app/admin/(dasbor)/layout.tsx` + `lib/admin-guard.ts` | pemeriksaan otoritatif tiap request (`requireAdmin()`) — tetap berlaku walau proxy dilewati. Karena membaca cookie, layout ini memakai `export const instant = false`. |
 | API | `app/api/qris/route.ts` | aksi tulis (unggah/ganti/hapus foto) wajib sesi |
+| API | `app/api/catalog/route.ts` | baca katalog apa adanya + simpan/hapus kategori, penyedia, produk, metode, setelan — wajib sesi |
 | Login/logout | `app/api/admin/login` · `app/api/admin/logout` | verifikasi password (timing-safe) → cookie `vcr_admin` httpOnly, SameSite=Lax, 8 jam, `Secure` di https; keluar = cookie dihapus |
 
 Sesi adalah cookie bertanda tangan HMAC-SHA256 (`lib/admin-session.ts`, memakai Web Crypto supaya
@@ -133,6 +145,69 @@ sesi. Konsekuensinya, sadar dan disengaja:
 
 Halaman dashboard dipindah ke route group `app/admin/(dasbor)/` supaya `/admin/login` bisa memakai
 layout font yang sama tanpa ikut terkunci.
+
+## Katalog (kategori, produk, harga, metode bayar)
+
+Katalog **tidak ada di dalam kode**. Semuanya tinggal di tabel Supabase dan bisa diubah dari
+`/admin/katalog` tanpa deploy ulang:
+
+| Tabel | Isi |
+| ----- | --- |
+| `catalog_categories` | kategori (Pulsa, Paket Data, …) + ikon, deskripsi, label input, panjang nomor, jenis (`nominal`/`paket`/`tagihan`), contoh tagihan, urutan, status |
+| `catalog_providers` | penyedia di dalam kategori (operator, wilayah PDAM, IndiHome, …) |
+| `catalog_items` | produk jual: nama, keterangan, nominal, **harga jual**, tanda unggulan + label kartu beranda, urutan, status |
+| `payment_methods` | metode bayar + **biaya tambahan** per metode, jenis (`qris`/`va`/`wallet`), awalan nomor VA, ikon |
+| `catalog_settings` | setelan global: `admin_fee`, `default_category` |
+
+**Harga jual ada di kolom `price`, bukan hasil rumus.** Dulu margin produk dihitung ulang di beberapa
+tempat (rumus Rp 1.000 / Rp 500), sehingga halaman produk, checkout, dan rekap admin bisa menyimpang.
+Sekarang angkanya satu: `price` dari `catalog_items`, dan `lib/catalog.ts` yang menyatukan aturannya:
+
+```
+total = harga produk (catalog_items.price) + biaya metode (payment_methods.fee) + admin_fee
+```
+
+untuk kategori `nominal`, `h` yang dikirim halaman produk adalah nominalnya sehingga harganya dicari
+di katalog; untuk `paket` dan `tagihan`, `h` sudah berupa harga/tagihan itu sendiri.
+
+**Tanpa data cadangan di kode.** Kalau Supabase tidak bisa dibaca, halaman publik menampilkan pesan
+apa adanya (`components/KatalogKosong.tsx`) — bukan daftar produk yang dipelihara di dua tempat.
+Ini pilihan sadar: satu sumber data, jadi harga yang tampil tidak pernah "versi kode" yang tertinggal.
+Konsekuensinya, katalog harus bisa dibaca agar situs berguna — lihat batasan di bagian berikut.
+
+### Setup katalog (sekali saja)
+
+1. Jalankan [`supabase/setup-katalog.sql`](supabase/setup-katalog.sql) (tabel + index + RLS).
+2. Jalankan [`supabase/seed-katalog.sql`](supabase/seed-katalog.sql) — mengisi katalog awal
+   (8 kategori, 26 penyedia, 128 produk, 4 metode). Aman diulang: kalau kategori sudah terisi,
+   seed dilewati. Isinya katalog statis yang dulu ada di `components/produk/data.ts` (file itu
+   sudah dihapus).
+
+Cara cepat menjalankannya tanpa membuka dashboard: dengan **personal access token** Supabase
+(`sbp_…`, dibuat di Account → Access Tokens) simpan di `.env.local` sebagai `SUPABASE_ACCESS_TOKEN`,
+lalu POST isi file SQL-nya ke `https://api.supabase.com/v1/projects/<ref>/database/query`. Yang
+dipakai aplikasi saat runtime tetap hanya `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+dan `SUPABASE_SERVICE_ROLE_KEY` — token akses hanya alat setup, tidak dipakai server.
+
+### Keamanan katalog
+
+- RLS aktif di semua tabel katalog dengan **satu policy SELECT untuk `anon`/`authenticated`** dan
+  tidak ada policy insert/update/delete. Jadi publishable key boleh membaca harga (memang publik)
+  tapi tidak bisa mengubahnya.
+- Menulis hanya lewat `/api/catalog` yang memakai `SUPABASE_SERVICE_ROLE_KEY` (server-only) dan
+  memeriksa sesi admin lebih dulu. Terverifikasi: `POST` dengan publishable key ditolak
+  (`new row violates row-level security policy`).
+- Setelah setiap perubahan, cache bertag `katalog` di-revalidate (`{ expire: 0 }`) sehingga request
+  berikutnya sudah memakai angka baru — bukan menyajikan versi lama dulu.
+
+### Verifikasi manual setelah setup
+
+1. Buka `/admin/katalog`, ubah **Harga jual** sebuah produk, klik **Simpan**.
+2. Buka `/produk?k=…` → harga baru langsung terpakai. Buka `/` → pilih kategori → harga di grid
+   nominal dan total ikut berubah.
+3. Ubah **biaya admin** atau **biaya metode** di editor → total di langkah pembayaran ikut berubah.
+4. Tambah kategori dengan status **nonaktif** → tidak muncul di beranda; aktifkan → langsung muncul.
+5. Hapus kategori/penyedia → produk di bawahnya ikut terhapus (cascade di database).
 
 ## Integrasi Supabase (foto QRIS)
 
@@ -244,27 +319,30 @@ pembatas best-effort per IP, validasi bentuk data, dan larangan mengubah order y
 tapi belum ada CAPTCHA atau verifikasi penyedia, jadi order `pending` palsu masih mungkin dibuat.
 Untuk produksi, tambahkan verifikasi pembayaran.
 
-`total` memakai satu rumus yang sama di tiga tempat — checkout beranda (`totalOf()` di
-`components/home/HomeView.tsx`), ringkasan halaman `/produk`, dan rekap admin
-(`components/admin/data.ts`):
+`total` dihitung satu kali di `lib/catalog.ts` (`totalOf()`) dan dipakai baik oleh checkout beranda
+maupun halaman `/produk`, dengan angka yang seluruhnya datang dari katalog:
 
 ```
-total = nominal + margin produk + biaya admin Rp 1.500 + biaya metode (kalau ada)
+total = harga produk (catalog_items.price) + biaya metode (payment_methods.fee) + admin_fee
 ```
 
-Margin produk mengikuti `N()` di `components/produk/data.ts`: Rp 1.000 untuk nominal di bawah
-Rp 20.000, Rp 500 sisanya. Kategori tagihan (PDAM, BPJS, Internet & TV, Multifinance) tidak kena
-margin karena angka yang dibayar adalah tagihannya. Halaman `/produk` belum bisa menampilkan biaya
-metode (metode dipilih di checkout beranda), jadi totalnya sama persis dengan checkout hanya untuk
-metode tanpa biaya tambahan — QRIS dan DANA.
+Harga produk adalah `catalog_items.price` — bukan nominal + margin yang dihitung ulang. Kategori
+tagihan (PDAM, BPJS, Internet & TV, Multifinance) punya harga 0 di katalog karena angka yang dibayar
+adalah tagihannya. Halaman `/produk` belum bisa menampilkan biaya metode (metode dipilih di checkout
+beranda), jadi totalnya sama persis dengan checkout hanya untuk metode tanpa biaya tambahan —
+QRIS dan DANA.
 
 ## Yang belum diubah
 
 - Nomor WhatsApp (`6281234567890`), email, alamat, dan link Instagram masih memakai data contoh
   dari versi asli.
-- Nominal tagihan (PDAM, BPJS, internet, multifinance) masih statis; belum ada integrasi backend.
-- **Tangga nominal** (pulsa, top up e-wallet, token PLN) adalah daftar placeholder tingkat aplikasi
-  di `components/produk/data.ts` (`NOMINAL_PULSA`, `NOMINAL_TOPUP`, `NOMINAL_TOKEN`) — bukan hasil
-  verifikasi supplier. Tidak ada SKU, product ID, harga modal, atau harga promo di proyek ini. Saat
-  feed supplier tersedia, ganti konstantanya; jangan menambah nominal langsung di dalam `ops`
-  supaya katalog tetap satu sumber antara halaman produk dan quick-pick beranda.
+- Nominal tagihan (PDAM, BPJS, internet, multifinance) masih contoh; tagihan asli belum diambil dari
+  penyedia mana pun. Angka "contoh tagihan" diisi di katalog (`bill_sample` + `bill`).
+- **Tangga nominal** (pulsa, top up e-wallet, token PLN) berisi placeholder di tabel
+  `catalog_items` — bukan hasil verifikasi supplier. Tidak ada SKU, product ID, harga modal, atau
+  harga promo di proyek ini. Saat feed supplier tersedia, ganti isi tabelnya dari panel
+  `/admin/katalog` (atau seed baru), bukan dengan menambah daftar di dalam kode.
+- Katalog dibaca tanpa fallback ke kode: kalau Supabase tidak bisa dijangkau, halaman publik
+  menampilkan pesan "Katalog belum bisa dimuat" sampai koneksinya kembali.
+- Panduan di `/cara-bayar` dan `components/cara-bayar/CaraBayarView.tsx` masih konten editorial
+  (langkah-langkah, tips, nama aplikasi). Yang diambil dari katalog hanya angka biayanya.

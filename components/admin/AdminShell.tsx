@@ -12,6 +12,7 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin", label: "Ringkasan", icon: "gauge" },
   { href: "/admin/transaksi", label: "Transaksi", icon: "receipt" },
   { href: "/admin/produk", label: "Produk", icon: "box" },
+  { href: "/admin/katalog", label: "Katalog", icon: "inbox" },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: "settings" },
 ];
 

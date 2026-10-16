@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { rp, type Method as CatalogMethod } from "@/lib/catalog";
 import s from "./cara-bayar.module.css";
 
 const SV = {
@@ -187,11 +188,26 @@ const M: Record<string, Method> = {
 
 const TN: Record<string, string> = { QRIS: "QRIS", VA: "Virtual Account", DANA: "DANA" };
 
-export default function CaraBayarView({ m: initM = "QRIS" }: { m?: string }) {
+export default function CaraBayarView({
+  m: initM = "QRIS",
+  methods = [],
+  adminFee = 0,
+}: {
+  m?: string;
+  /** Metode pembayaran dari katalog — dipakai hanya untuk angka biayanya. */
+  methods?: CatalogMethod[];
+  adminFee?: number;
+}) {
   const [m, setM] = useState(M[initM] ? initM : "QRIS");
   const [sub, setSub] = useState<string | null>(null);
 
   const x = M[m];
+  /* Dua baris biaya diambil dari katalog (biaya admin + biaya Virtual Account),
+     jadi angka di panduan tidak bisa berbeda dengan yang ditagih checkout. */
+  const vaFee = methods.find((it) => it.kind === "va")?.fee ?? 0;
+  const info = x.info.map(([a, b]) =>
+    a === "Biaya admin" ? [a, rp(adminFee)] : a === "Biaya VA" ? [a, "+ " + rp(vaFee)] : [a, b]
+  );
   const subKeys = Object.keys(x.sub);
   const cur = sub && x.sub[sub] ? sub : subKeys[0];
   const tt = "Bayar pakai " + TN[m] + (subKeys.length > 1 ? " · " + cur : "");
@@ -285,7 +301,7 @@ export default function CaraBayarView({ m: initM = "QRIS" }: { m?: string }) {
             <div className={s.card}>
               <h3 style={{ marginBottom: 8 }}>Info metode</h3>
               <div>
-                {x.info.map(([a, b]) => (
+                {info.map(([a, b]) => (
                   <div className={s.li} key={a}>
                     <span>{a}</span>
                     <b>{b}</b>

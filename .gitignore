@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Command Code local agent state (taste/preferences)
 /.commandcode/
+
+# artefak playwright-cli (snapshot, console log)
+/.playwright-cli/

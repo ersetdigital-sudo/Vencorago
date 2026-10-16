@@ -6,7 +6,17 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Logo from "@/components/Logo";
 import s from "./home.module.css";
-import { K, checkNumber, normalizeNumber, nominalsOf } from "@/components/produk/data";
+import {
+  catOf,
+  checkNumber,
+  normalizeNumber,
+  nominalsOf,
+  priceOf,
+  rp,
+  totalOf,
+  type Catalog,
+} from "@/lib/catalog";
+import KatalogKosong from "@/components/KatalogKosong";
 import { fetchQris } from "@/lib/qris";
 
 const SV = {
@@ -118,56 +128,42 @@ function Ic({ n }: { n: IconName }) {
 }
 
 const WA = "6281234567890";
-const ADMIN = 1500;
-const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
-/* Ikon dan teks singkat khusus beranda; daftar nominalnya diturunkan dari
-   katalog di components/produk/data.ts supaya pilihan cepat di sini tidak
-   menyimpang dari halaman produk. Kategori paket dan tagihan tidak punya
-   nominal tetap, jadi pilihannya diarahkan ke halaman produk. */
-type Cat = [string, string, string, number[] | null];
-const TILES: [string, string, string][] = [
-  ["phone", "Pulsa", "Pulsa semua operator"],
-  ["wifi", "Paket Data", "Internet lebih hemat"],
-  ["zap", "Token PLN", "Listrik prabayar"],
-  ["drop", "PDAM", "Tagihan air daerah"],
-  ["shield", "BPJS Kesehatan", "Bayar lebih mudah"],
-  ["tv", "Internet & TV", "IndiHome, First, dll"],
-  ["wallet", "E-Wallet", "DANA, OVO, GoPay"],
-  ["bank", "Multifinance", "Angsuran kendaraan"],
-];
-const C: Cat[] = TILES.map(([icon, name, desc]) => {
-  const noms = K[name]?.kind == "nominal" ? nominalsOf(name) : [];
-  return [icon, name, desc, noms.length ? noms : null];
-});
 
-const BILL: Record<string, number> = {
-  PDAM: 87500,
-  "BPJS Kesehatan": 150000,
-  "Internet & TV": 385000,
-  Multifinance: 1250000,
-};
-
-/* [icon, nama produk, nominal, kategori (param k), operator (param op)] */
-type Prod = [string, string, number, string, string];
-const P: Prod[] = [
-  ["wallet", "Saldo DANA", 1e5, "E-Wallet", "DANA"],
-  ["phone", "Pulsa Telkomsel", 25e3, "Pulsa", "Telkomsel"],
-  ["zap", "Token PLN", 5e4, "Token PLN", "PLN Prabayar"],
-  ["wallet", "Saldo OVO", 2e5, "E-Wallet", "OVO"],
+const MENU: { label: string; href: string; on?: boolean }[] = [
+  { label: "Beranda", href: "/", on: true },
+  { label: "Produk", href: "/produk" },
+  { label: "Cara Bayar", href: "/cara-bayar" },
+  { label: "Cek Status", href: "/status" },
+  { label: "Bantuan", href: "/bantuan" },
+  { label: "Kontak", href: "/kontak" },
 ];
+
+/* Semua daftar di bawah dibangun dari katalog Supabase yang dikirim sebagai prop
+   dari app/page.tsx. Tidak ada kategori, nominal, harga, metode bayar, atau
+   biaya admin yang ditulis di file ini. */
+
+/* [icon, nama kategori, catatan singkat, nominal | null] */
+type Tile = [string, string, string, number[] | null];
+const tilesOf = (catalog: Catalog): Tile[] =>
+  catalog.cats.map((c) => {
+    const noms = c.kind == "nominal" ? nominalsOf(c) : [];
+    return [c.i, c.n, c.tile, noms.length ? noms : null];
+  });
+
+/* [icon, label kartu, nominal, kategori (param k), penyedia (param op), harga] */
+type Prod = [string, string, number, string, string, number];
+const featuredOf = (catalog: Catalog): Prod[] =>
+  catalog.featured.map((f) => [f.icon, f.label, f.value, f.cat, f.provider, f.price]);
+
+/* [icon, nama, catatan, biaya tambahan, jenis, awalan nomor VA] */
+type PayMethod = [string, string, string, number, "qris" | "va" | "wallet", string];
+const methodsOf = (catalog: Catalog): PayMethod[] =>
+  catalog.methods.map((m) => [m.icon, m.name, m.note, m.fee, m.kind, m.prefix]);
 
 /* Kartu produk mengarah ke halaman detail `/produk` dengan operator dan nominal
    yang sudah terpilih, bukan quick-pick di checkout halaman ini. */
 const detailHref = (p: Prod) =>
   `/produk?k=${encodeURIComponent(p[3])}&op=${encodeURIComponent(p[4])}&h=${p[2]}`;
-
-type PayMethod = [string, string, string, number];
-const PM: PayMethod[] = [
-  ["qr", "QRIS", "Semua e-wallet & m-banking", 0],
-  ["card", "Virtual Account BCA", "Cek otomatis", 2500],
-  ["card", "Virtual Account Mandiri", "Cek otomatis", 2500],
-  ["wallet", "DANA", "Bayar langsung", 0],
-];
 
 type St = {
   cat: string;
@@ -190,23 +186,6 @@ const STEP: Record<View, number> = {
   verifying: 3,
   done: 4,
 };
-
-const catOf = (n: string | null | undefined) => C.find((c) => c[1] === n);
-
-/* Margin produk — rumus yang sama dengan components/produk/data.ts (N()): nominal
-   di bawah Rp 20.000 kena Rp 1.000, sisanya Rp 500. Kategori tagihan (nominalnya
-   null) tidak pakai margin karena angka yang dibayar adalah tagihannya. */
-const margin = (v: number) => (v < 2e4 ? 1000 : 500);
-
-/* Yang dibayar pelanggan: harga produk (nominal + margin) + biaya metode + biaya
-   admin. Ini rumus yang dipakai halaman detail produk dan panel admin,
-   jadi checkout di sini harus menghasilkan angka yang sama. */
-function totalOf(h: number, cat: string | null | undefined, pm: number) {
-  /* Belum ada produk yang dipilih berarti belum ada yang dibayar. */
-  if (!h) return { margin: 0, total: 0 };
-  const m = catOf(cat)?.[3] && h ? margin(h) : 0;
-  return { margin: m, total: h + m + PM[pm][3] + ADMIN };
-}
 
 function QrSvg() {
   const rects: ReactNode[] = [];
@@ -240,21 +219,21 @@ function QrSvg() {
 
 type Seed = { st: St; view: View; sel: string; num: string; toast: string };
 
-function seedState(k: string, h: string, p: string, no: string): Seed {
-  const c = catOf(k);
+function seedState(catalog: Catalog, k: string, h: string, p: string, no: string): Seed {
+  const c = catOf(catalog, k);
   if (!c) return { st: EMPTY, view: "empty", sel: "", num: "", toast: "" };
   const hNum = +h || 0;
   const base: St = { cat: k, h: hNum, prod: p || k, no: "", pm: 0, inv: "", sn: "" };
   if (!no) return { st: base, view: "pick", sel: k, num: "", toast: "" };
-  if (c[3] && !hNum)
+  if (c.kind == "nominal" && !hNum)
     return { st: base, view: "pick", sel: k, num: no, toast: "Pilih nominal dulu" };
-  const bad = checkNumber(k, no);
+  const bad = checkNumber(c, no);
   if (bad) return { st: base, view: "pick", sel: k, num: no, toast: bad };
   const noNorm = normalizeNumber(no);
   return {
-    /* Kategori tagihan memakai nominal contoh dari BILL; kategori paket sudah
-       membawa harga paketnya sendiri dari halaman produk. */
-    st: { ...base, h: c[3] ? hNum : (BILL[k] ?? hNum), no: noNorm },
+    /* Kategori tagihan memakai contoh nominal dari katalog (`sample`); kategori
+       paket sudah membawa harga paketnya sendiri dari halaman produk. */
+    st: { ...base, h: c.kind == "nominal" ? hNum : (c.sample ?? hNum), no: noNorm },
     view: "loading",
     sel: k,
     num: noNorm,
@@ -263,17 +242,22 @@ function seedState(k: string, h: string, p: string, no: string): Seed {
 }
 
 export default function HomeView({
+  catalog,
   k = "",
   h = "",
   p = "",
   no = "",
 }: {
+  catalog: Catalog;
   k?: string;
   h?: string;
   p?: string;
   no?: string;
 }) {
-  const seed = seedState(k, h, p, no);
+  const C = tilesOf(catalog);
+  const P = featuredOf(catalog);
+  const PM = methodsOf(catalog);
+  const seed = seedState(catalog, k, h, p, no);
   const [st, setSt] = useState<St>(seed.st);
   const [view, setView] = useState<View>(seed.view);
   const [sel, setSel] = useState(seed.sel);
@@ -301,10 +285,12 @@ export default function HomeView({
     });
   }, [view]);
 
-  const cat = catOf(st.cat);
-  const catKind = K[st.cat]?.kind;
-  const price = totalOf(st.h, st.cat, st.pm);
-  const pmFee = PM[st.pm][3] + ADMIN;
+  const hitung = (h: number, catName: string, pmIdx: number) =>
+    totalOf(catalog, h, catName, PM[pmIdx]?.[1]);
+  const cat = catOf(catalog, st.cat);
+  const catKind = cat?.kind;
+  const price = hitung(st.h, st.cat, st.pm);
+  const pmFee = (PM[st.pm]?.[3] ?? 0) + catalog.adminFee;
   const step = STEP[view];
   const total = rp(price.total);
 
@@ -336,18 +322,18 @@ export default function HomeView({
   }
 
   function cek() {
-    const c = catOf(st.cat);
+    const c = catOf(catalog, st.cat);
     if (!c) return toast("Pilih produk dulu ya");
-    if (K[st.cat]?.kind == "paket") return toast("Paket data dipilih dari halaman Produk");
-    if (c[3] && !st.h) return toast("Pilih nominal dulu");
-    const bad = checkNumber(st.cat, num);
+    if (c.kind == "paket") return toast("Paket data dipilih dari halaman Produk");
+    if (c.kind == "nominal" && !st.h) return toast("Pilih nominal dulu");
+    const bad = checkNumber(c, num);
     if (bad) return toast(bad);
     const no = normalizeNumber(num);
     setView("loading");
     setTimeout(() => {
       setSt((prev) => ({
         ...prev,
-        h: c[3] ? prev.h : (BILL[c[1]] ?? prev.h),
+        h: c.kind == "nominal" ? prev.h : (c.sample ?? prev.h),
         no,
         pm: 0,
       }));
@@ -367,7 +353,7 @@ export default function HomeView({
       cat: cur.cat,
       no: cur.no,
       pm: PM[cur.pm][1],
-      total: totalOf(cur.h, cur.cat, cur.pm).total,
+      total: hitung(cur.h, cur.cat, cur.pm).total,
       status,
       sn: cur.sn || "",
       time: Date.now(),
@@ -447,18 +433,16 @@ export default function HomeView({
   const mm = String(Math.floor(secs / 60)).padStart(2, "0");
   const ss = String(secs % 60).padStart(2, "0");
 
+  /* Katalog tidak terbaca (Supabase mati / env kosong): tampilkan pesannya apa
+     adanya, bukan daftar produk cadangan — katalog hanya punya satu sumber.
+     Pemeriksaan ini sengaja ditaruh setelah semua hook supaya urutan hook tetap. */
+  if (!catalog.ok) return <KatalogKosong s={s} menu={MENU} pesan={catalog.error} />;
+
   return (
     <div className={s.pg}>
       <Header
         s={s}
-        menu={[
-          { label: "Beranda", href: "/", on: true },
-          { label: "Produk", href: "/produk" },
-          { label: "Cara Bayar", href: "/cara-bayar" },
-          { label: "Cek Status", href: "/status" },
-          { label: "Bantuan", href: "/bantuan" },
-          { label: "Kontak", href: "/kontak" },
-        ]}
+        menu={MENU}
         btnIcon={
           <i className={s.ic}>
             <Ic n="chat" />
@@ -630,9 +614,8 @@ export default function HomeView({
                     <b>{rp(p[2])}</b>
                   </div>
                 </div>
-                <span className={s.tag}>Harga bersaing</span>
-                <div className={s.row}>
-                  {rp(p[2] + margin(p[2]))}
+                <span className={s.tag}>Harga bersaing</span>                  <div className={s.row}>
+                  {rp(p[5])}
                   <Link className={s.btn} href={detailHref(p)} aria-label={`Beli ${p[1]} — buka halaman detail produk`}>
                     <Ic n="cart" /> Beli
                   </Link>
@@ -670,22 +653,22 @@ export default function HomeView({
                   </div>
                   <div className={s.cust}>
                     <span className={s.pi}>
-                      <Ic n={cat[0] as IconName} />
+                      <Ic n={cat.i as IconName} />
                     </span>
                     <b>{st.cat}</b>
                   </div>
-                  {cat[3] ? (
+                  {cat.kind == "nominal" ? (
                     <>
-                      <div className={s.lbl}>{K[st.cat]?.nomLabel || "Pilih nominal"}</div>
+                      <div className={s.lbl}>{cat.nomLabel || "Pilih nominal"}</div>
                       <div className={s.noms}>
-                        {cat[3].map((v) => (
+                        {nominalsOf(cat).map((v) => (
                           <div
                             key={v}
                             className={`${s.nom} ${v == st.h ? s.on : ""}`}
                             onClick={() => pickNominal(v)}
                           >
                             <b>{rp(v)}</b>
-                            <small>Harga {rp(v + margin(v))}</small>
+                            <small>Harga {rp(priceOf(cat, v) ?? v)}</small>
                           </div>
                         ))}
                       </div>
@@ -728,7 +711,7 @@ export default function HomeView({
                     <span>Produk</span>
                     <b>{st.prod}</b>
                   </div>
-                  {cat?.[3] && st.prod == st.cat ? (
+                  {cat?.kind == "nominal" && st.prod == st.cat ? (
                     <div className={s.li}>
                       <span>Nominal</span>
                       <b>{rp(st.h)}</b>
@@ -739,8 +722,8 @@ export default function HomeView({
                     <b>{st.no}</b>
                   </div>
                   <div className={s.li}>
-                    <span>{BILL[st.cat] ? "Tagihan (contoh)" : "Harga"}</span>
-                    <b>{rp(st.h + price.margin)}</b>
+                    <span>{cat?.sample ? "Tagihan (contoh)" : "Harga"}</span>
+                    <b>{rp(price.harga)}</b>
                   </div>
                   <div className={s.li}>
                     <span>Biaya admin</span>
@@ -786,7 +769,7 @@ export default function HomeView({
                     <span>Total bayar</span>
                     <b style={{ color: "var(--teal)", fontSize: 18 }}>{total}</b>
                   </div>
-                  {st.pm == 0 && (
+                  {PM[st.pm]?.[4] == "qris" && (
                     <div className={s.qrbox}>
                       <b>Scan QRIS</b>
                       <div className={s.q}>
@@ -807,26 +790,27 @@ export default function HomeView({
                       </small>
                     </div>
                   )}
-                  {st.pm == 3 && (
+                  {PM[st.pm]?.[4] == "wallet" && (
                     <div className={s.va}>
-                      Kamu akan diarahkan ke aplikasi DANA
+                      Kamu akan diarahkan ke aplikasi {PM[st.pm]?.[1]}
                       <br />
                       <small>Selesaikan pembayaran di aplikasi</small>
                     </div>
                   )}
-                  {st.pm != 0 && st.pm != 3 && (
+                  {PM[st.pm]?.[4] == "va" && (
                     <div className={s.va}>
-                      <small>Nomor {PM[st.pm][1]}</small>
+                      <small>Nomor {PM[st.pm]?.[1]}</small>
                       <br />
                       <b>
-                        8808 {st.inv.slice(-8, -4)} {st.inv.slice(-4)}
+                        {PM[st.pm]?.[5]} {st.inv.slice(-8, -4)} {st.inv.slice(-4)}
                       </b>
                       <br />
                       <button
                         className={`${s.btn} ${s.ghost}`}
                         style={{ marginTop: 8, padding: "6px 12px" }}
                         onClick={() => {
-                          navigator.clipboard && navigator.clipboard.writeText("8808" + st.inv.slice(-8));
+                          navigator.clipboard &&
+                            navigator.clipboard.writeText((PM[st.pm]?.[5] ?? "") + st.inv.slice(-8));
                           toast("Nomor VA disalin");
                         }}
                       >
@@ -880,7 +864,7 @@ export default function HomeView({
                     <span>Produk</span>
                     <b>{st.prod}</b>
                   </div>
-                  {cat?.[3] && st.prod == st.cat ? (
+                  {cat?.kind == "nominal" && st.prod == st.cat ? (
                     <div className={s.li}>
                       <span>Nominal</span>
                       <b>{rp(st.h)}</b>

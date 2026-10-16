@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import s from "./produk.module.css";
-import { CATS, K, checkNumber, normalizeNumber, rp } from "./data";
+import { checkNumber, normalizeNumber, rp, type Catalog, type Cat } from "@/lib/catalog";
+import KatalogKosong from "@/components/KatalogKosong";
 
 const SV = {
   phone: (
@@ -72,29 +73,51 @@ function Ic({ n }: { n: IconName }) {
   );
 }
 
-const ADMIN = 1500;
+/* Angka biaya di FAQ diambil dari katalog (biaya admin + biaya Virtual Account),
+   jadi teksnya tidak bisa menyimpang dari yang benar-benar ditagih checkout. */
+function faqs(adminFee: number, vaFee: number): [string, string][] {
+  return [
+    ["Berapa lama prosesnya?", "Rata-rata 5 detik sampai 3 menit setelah pembayaran terverifikasi."],
+    ["Bagaimana kalau transaksi gagal?", "Dana dikembalikan 100% ke saldo atau rekening kamu maksimal 1x24 jam."],
+    [
+      "Apakah ada biaya tambahan?",
+      `Harga di atas sudah termasuk margin produk. Biaya admin ${rp(adminFee)}, dan Virtual Account dikenakan tambahan ${rp(vaFee)}.`,
+    ],
+    ["Bisa cek transaksi sebelumnya?", "Bisa, buka halaman Cek Status dan masukkan nomor invoice kamu."],
+  ];
+}
 
-const FAQS: [string, string][] = [
-  ["Berapa lama prosesnya?", "Rata-rata 5 detik sampai 3 menit setelah pembayaran terverifikasi."],
-  ["Bagaimana kalau transaksi gagal?", "Dana dikembalikan 100% ke saldo atau rekening kamu maksimal 1x24 jam."],
-  [
-    "Apakah ada biaya tambahan?",
-    "Harga di atas sudah termasuk margin produk. Biaya admin Rp 1.500, dan Virtual Account dikenakan tambahan Rp 2.500.",
-  ],
-  ["Bisa cek transaksi sebelumnya?", "Bisa, buka halaman Cek Status dan masukkan nomor invoice kamu."],
+const MENU: { label: string; href: string; on?: boolean }[] = [
+  { label: "Beranda", href: "/" },
+  { label: "Produk", href: "/produk", on: true },
+  { label: "Cek Status", href: "/status" },
+  { label: "Cara Bayar", href: "/cara-bayar" },
+  { label: "Bantuan", href: "/bantuan" },
+  { label: "Kontak", href: "/kontak" },
 ];
 
 export default function ProdukView({
-  k = "Pulsa",
-  op: opParam = "",
+  catalog,
+  cat,
+  op = "",
   h = "",
 }: {
-  k?: string;
+  catalog: Catalog;
+  cat?: Cat;
   op?: string;
   h?: string;
 }) {
-  const cat = k;
-  const c = K[cat];
+  /* Katalog belum terbaca: tidak ada yang bisa ditampilkan. Semua hook ada di
+     `Detail`, jadi keluar di sini tidak pernah mengubah urutan hook. */
+  if (!cat) return <KatalogKosong s={s} menu={MENU} pesan={catalog.error} />;
+  return <Detail catalog={catalog} c={cat} op={op} h={h} />;
+}
+
+/* Kategori bisa berganti (lihat `key` di app/produk/page.tsx), jadi seluruh
+   nilai di bawah selalu diturunkan dari kategori yang sedang dibuka. */
+function Detail({ catalog, c, op: opParam, h }: { catalog: Catalog; c: Cat; op: string; h: string }) {
+  const ADMIN = catalog.adminFee;
+  const FAQS = faqs(ADMIN, catalog.methods.find((m) => m.kind === "va")?.fee ?? 0);
   const firstOp = opParam && c.ops[opParam] ? opParam : Object.keys(c.ops)[0];
   const [op, setOp] = useState(firstOp);
   // Nominal yang dikirim beranda langsung terpilih di grid item.
@@ -133,7 +156,7 @@ export default function ProdukView({
       <div className={s.sumGroup}>
         <div className={s.li}>
           <span>Produk</span>
-          <b>{cat}</b>
+          <b>{c.n}</b>
         </div>
         <div className={s.li}>
           <span>Penyedia</span>
@@ -188,14 +211,14 @@ export default function ProdukView({
 
   function go() {
     if (!sel) return setErr(c.kind == "paket" ? "Pilih paket data dulu" : "Pilih nominal dulu");
-    const bad = checkNumber(cat, num);
+    const bad = checkNumber(c, num);
     if (bad) return setErr(bad);
     setErr("");
     const n = normalizeNumber(num);
     /* Paket sudah punya harga jual sendiri, sedangkan pulsa/token/e-wallet
        dikirim sebagai nominal supaya checkout menghitung marginnya. */
     const hargaKirim = c.kind == "paket" ? sel.p : sel.v;
-    location.href = `/?k=${encodeURIComponent(cat)}&h=${hargaKirim}&p=${encodeURIComponent(
+    location.href = `/?k=${encodeURIComponent(c.n)}&h=${hargaKirim}&p=${encodeURIComponent(
       isBill ? op : op + " " + sel.n
     )}&no=${n}`;
   }
@@ -213,7 +236,7 @@ export default function ProdukView({
         `Masukkan ${c.nl.toLowerCase()}`,
         "Klik Lanjut Bayar lalu cek detail pesanan",
         "Pilih metode bayar: QRIS, Virtual Account, atau DANA",
-        cat == "Token PLN"
+        c.n == "Token PLN"
           ? "Token listrik langsung muncul setelah pembayaran"
           : "Transaksi diproses otomatis, cek status kapan saja",
       ];
@@ -238,41 +261,31 @@ export default function ProdukView({
 
   return (
     <div className={s.pg}>
-      <Header
-        s={s}
-        menu={[
-          { label: "Beranda", href: "/" },
-          { label: "Produk", href: "/produk", on: true },
-          { label: "Cek Status", href: "/status" },
-          { label: "Cara Bayar", href: "/cara-bayar" },
-          { label: "Bantuan", href: "/bantuan" },
-          { label: "Kontak", href: "/kontak" },
-        ]}
-      />
+      <Header s={s} menu={MENU} />
 
       <main className={s.wrap}>
         <div className={s.tabs}>
-          {CATS.map((name) => (
+          {catalog.cats.map((x) => (
             <Link
-              key={name}
-              href={`/produk?k=${encodeURIComponent(name)}`}
-              className={name == cat ? s.on : undefined}
+              key={x.n}
+              href={`/produk?k=${encodeURIComponent(x.n)}`}
+              className={x.n == c.n ? s.on : undefined}
             >
-              <Ic n={K[name].i as IconName} /> {name}
+              <Ic n={x.i as IconName} /> {x.n}
             </Link>
           ))}
         </div>
         <div className={s.crumb}>
           <Link href="/">Beranda</Link>
           {" / Produk / "}
-          <b>{cat}</b>
+          <b>{c.n}</b>
         </div>
         <section className={s.hero}>
           <div className={s.big}>
             <Ic n={c.i as IconName} />
           </div>
           <div>
-            <h1>{cat}</h1>
+            <h1>{c.n}</h1>
             <p>{c.d}</p>
           </div>
         </section>
