@@ -86,10 +86,10 @@ Halaman: `/admin` (ringkasan, KPI, grafik 7/14/30 hari), `/admin/transaksi` (led
 pencarian + paginasi + detail baris), `/admin/produk`
 (per kategori, produk, metode bayar). Setiap halaman punya ekspor CSV.
 
-**Sumber datanya.** Proyek ini belum punya backend: transaksi ditulis client-side ke
-`localStorage.vcr_tx`. Dashboard menampilkan **hanya orderan nyata** yang dibuat dari checkout di
-perangkat itu — tidak ada data contoh, jadi daftar dan grafik memang kosong sampai ada order
-masuk. Tanpa API + database belum ada rekap lintas perangkat.
+**Sumber datanya.** Order disimpan di tabel `transactions` Supabase dan diakses lewat route server
+`/api/tx` (kunci `SUPABASE_SERVICE_ROLE_KEY`, tidak pernah ke browser) — jadi order dari HP
+pelanggan mana pun muncul di dashboard ini. Tidak ada data contoh: kalau belum ada order, daftarnya
+memang kosong. Jalankan `supabase/setup-transaksi.sql` sekali sebelum dipakai.
 
 **Desainnya diambil dari NeedMCP**, bukan dikarang sendiri:
 
@@ -219,13 +219,30 @@ jangan diubah tanpa mengecek ulang tampilannya.
    meneruskan `searchParams` dari server component sebagai props, supaya HTML pertama sudah sesuai
    parameter (tidak ada kedipan). Karena Cache Components aktif, akses `searchParams` harus berada
    di dalam Suspense, jadi route tersebut memakai `export const instant = false`.
-   `/status` justru membaca `?inv=` di client karena datanya berasal dari `localStorage`.
+   `/status` justru membaca `?inv=` di client — datanya diambil dari `/api/tx?inv=…` (publik, satu
+   invoice per permintaan).
 
 ## Data transaksi
 
-Riwayat transaksi disimpan di `localStorage` dengan key `vcr_tx` (ditulis di halaman beranda,
-dibaca di halaman Cek Status dan dashboard admin). Struktur record:
-`{ inv, prod, cat, no, pm, total, status, sn, time, paid }`.
+Order ditulis checkout ke `/api/tx` lalu tersimpan di tabel `transactions` (Supabase) dengan
+struktur `{ inv, prod, cat, no, pm, total, status, sn, time, paid }`.
+
+Aturan yang dijaga route `/api/tx`:
+
+- Order baru selalu `pending`; `success` langsung hanya diterima dari migrasi data lama di
+  perangkat admin (sudah punya sesi).
+- Setelah `success`, order tidak bisa diubah lagi dan status tidak pernah boleh mundur.
+- `GET /api/tx` tanpa `?inv=` wajib sesi admin; `GET /api/tx?inv=…` publik untuk halaman Cek Status.
+- Tabelnya **RLS aktif tanpa policy** — publishable key tidak bisa membaca/menulis sama sekali.
+
+`localStorage.vcr_tx` masih ditulis sebagai jaring pengaman kalau jaringan putus. Sisa order di
+perangkat admin (termasuk data dari masa sebelum Supabase dipakai) dikirim sekali otomatis saat
+dashboard dibuka, ditandai `vcr_tx_migrated`.
+
+**Batasan keamanan:** `/api/tx` memang terbuka untuk publik karena checkout publik. Sudah ada
+pembatas best-effort per IP, validasi bentuk data, dan larangan mengubah order yang sudah selesai —
+tapi belum ada CAPTCHA atau verifikasi penyedia, jadi order `pending` palsu masih mungkin dibuat.
+Untuk produksi, tambahkan verifikasi pembayaran.
 
 `total` memakai satu rumus yang sama di tiga tempat — checkout beranda (`totalOf()` di
 `components/home/HomeView.tsx`), ringkasan halaman `/produk`, dan rekap admin

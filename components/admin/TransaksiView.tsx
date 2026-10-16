@@ -30,7 +30,7 @@ export default function TransaksiView({
   q?: string;
   status?: string;
 }) {
-  const { tx, loading } = useTx();
+  const { tx, loading, error } = useTx();
   const [q, setQ] = useState(initialQ);
   const [status, setStatus] = useState<"all" | TxStatus>(
     (["all", "success", "pending", "expired"] as string[]).includes(initialStatus)
@@ -84,7 +84,11 @@ export default function TransaksiView({
         <div>
           <h1 className={s.pageTitle}>Transaksi</h1>
           <p className={s.pageSub}>
-            {loading ? "Menyiapkan data…" : `${rows.length} transaksi cocok · ${summary.pending} menunggu tindakan`}
+            {loading
+              ? "Menyiapkan data…"
+              : error
+                ? error
+                : `${rows.length} transaksi cocok · ${summary.pending} menunggu tindakan`}
           </p>
         </div>
         <div className={s.pageAction}>

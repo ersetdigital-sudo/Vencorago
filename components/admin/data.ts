@@ -1,6 +1,9 @@
-/* Sumber data panel admin: hanya orderan yang benar-benar dibuat dari checkout
-   publik di perangkat ini (localStorage `vcr_tx`). Tidak ada data contoh —
-   kalau belum ada order, daftarnya memang kosong. */
+/* Bentuk record order + format angka/tanggal untuk panel admin.
+
+   Sumber datanya tabel `transactions` di Supabase (lewat `/api/tx`, lihat
+   `useTx`). `readLocal` hanya dipakai untuk memindahkan sisa order yang masih
+   tersimpan di perangkat ini saat dashboard pertama dibuka. Tidak ada data
+   contoh — kalau belum ada order, daftarnya memang kosong. */
 
 export type TxStatus = "success" | "pending" | "expired";
 

@@ -361,8 +361,7 @@ export default function HomeView({
 
   function save(status: "pending" | "success", patch: Partial<St>) {
     const cur = { ...st, ...patch };
-    const d = JSON.parse(localStorage.getItem("vcr_tx") || "{}");
-    d[cur.inv] = {
+    const rec = {
       inv: cur.inv,
       prod: cur.prod,
       cat: cur.cat,
@@ -371,10 +370,24 @@ export default function HomeView({
       total: totalOf(cur.h, cur.cat, cur.pm).total,
       status,
       sn: cur.sn || "",
-      time: d[cur.inv]?.time || Date.now(),
+      time: Date.now(),
       paid: status == "success" ? Date.now() : null,
     };
-    localStorage.setItem("vcr_tx", JSON.stringify(d));
+    /* Order hidup di tabel `transactions` Supabase (lewat /api/tx). Salinan
+       lokal tetap ditulis sebagai jaring pengaman kalau jaringan putus — sisa
+       yang belum terkirim ikut dikirim otomatis saat dashboard admin dibuka. */
+    try {
+      const d = JSON.parse(localStorage.getItem("vcr_tx") || "{}");
+      d[cur.inv] = { ...rec, time: d[cur.inv]?.time || rec.time };
+      localStorage.setItem("vcr_tx", JSON.stringify(d));
+    } catch {
+      /* localStorage bisa diblokir; order tetap dikirim ke server. */
+    }
+    void fetch("/api/tx", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rec),
+    }).catch(() => null);
   }
 
   function pay() {

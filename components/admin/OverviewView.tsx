@@ -11,7 +11,7 @@ import { useTx } from "./useTx";
 const PERIODS = [7, 14, 30];
 
 export default function OverviewView() {
-  const { tx, loading } = useTx();
+  const { tx, loading, error } = useTx();
   const [days, setDays] = useState(7);
 
   const sum = useMemo(() => summarize(tx), [tx]);
@@ -38,7 +38,7 @@ export default function OverviewView() {
         <div>
           <h1 className={s.pageTitle}>Ringkasan</h1>
           <p className={s.pageSub}>
-            {loading ? "Menyiapkan data…" : `${sum.count} transaksi dari perangkat ini`}
+            {loading ? "Menyiapkan data…" : error ? error : `${sum.count} transaksi`}
           </p>
         </div>
         <div className={s.pageAction}>

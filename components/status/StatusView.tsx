@@ -29,7 +29,11 @@ const LBL: Record<string, string> = {
 };
 
 function db(): Record<string, Tx> {
-  return JSON.parse(localStorage.getItem("vcr_tx") || "{}");
+  try {
+    return JSON.parse(localStorage.getItem("vcr_tx") || "{}");
+  } catch {
+    return {};
+  }
 }
 
 function stat(t: Tx) {
@@ -43,12 +47,24 @@ export default function StatusView() {
   const [notFound, setNotFound] = useState(false);
   const [hist, setHist] = useState<Tx[]>([]);
 
-  function find(input: string, scroll = false) {
+  /* Invoice dicari di Supabase lewat /api/tx — jadi status bisa dicek dari
+     perangkat mana pun, bukan cuma dari HP yang memesan. */
+  async function find(input: string, scroll = false) {
     const inv = input.trim().toUpperCase();
     if (!inv) return;
     window.history.replaceState(null, "", "?inv=" + inv);
     setQ(inv);
-    const t = db()[inv];
+    let t: Tx | null = null;
+    try {
+      const r = await fetch(`/api/tx?inv=${encodeURIComponent(inv)}`);
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; tx?: Tx | null };
+      t = r.ok && j.ok ? (j.tx ?? null) : null;
+    } catch {
+      t = null;
+    }
+    /* Kalau Supabase belum dikonfigurasi (atau jaringan putus), pakai salinan di
+       perangkat ini supaya pelanggan tetap bisa melihat order miliknya. */
+    if (!t) t = db()[inv] ?? null;
     if (!t) {
       setFound(null);
       setNotFound(true);
