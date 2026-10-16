@@ -94,10 +94,11 @@ export function susunKatalog(
       const list = (itemsPerProvider.get(p.id) ?? []).sort((a, b) => a.sort - b.sort || a.id - b.id);
       ops[p.name] = list.map((it) => ({ n: it.name, d: it.note, v: angka(it.value), p: angka(it.price) }));
       for (const it of list) {
-        if (!it.featured || !it.card_label) continue;
+        if (!it.featured) continue;
+        /* Label kartu opsional: kalau dikosongkan, beranda memakai nama produk. */
         featured.push({
           icon: c.icon,
-          label: it.card_label,
+          label: it.card_label || it.name,
           value: angka(it.value),
           price: angka(it.price),
           cat: c.name,

@@ -73,9 +73,10 @@ export type Entitas = "category" | "provider" | "item" | "method" | "setting";
 /* --------------------------------------------------------------- bantuan -- */
 
 /**
- * Alasan sebuah produk unggulan tidak sampai ke beranda. Beranda hanya
- * merender item aktif yang punya label kartu, di penyedia aktif, di kategori
- * aktif (lihat lib/catalog.server.ts → susunKatalog + loadCatalog).
+ * Alasan sebuah produk unggulan tidak sampai ke beranda. Beranda merender item
+ * unggulan yang aktif, di penyedia aktif, di kategori aktif (lihat
+ * lib/catalog.server.ts → susunKatalog + loadCatalog). Label kartu tidak lagi
+ * jadi syarat: kalau kosong, beranda memakai nama produk.
  * Mengembalikan "" kalau produknya memang tampil.
  */
 export function alasanTidakTampil(
@@ -83,12 +84,11 @@ export function alasanTidakTampil(
   penyedia: Penyedia | undefined,
   kategori: Kat | undefined
 ): string {
-  if (!it.featured) return "Belum dicentang";
-  if (!it.card_label) return "Label kartu kosong";
-  if (!it.active) return "Produk nonaktif";
-  if (!penyedia) return "Penyedia tidak ada";
-  if (!penyedia.active) return "Penyedia nonaktif";
-  if (!kategori) return "Kategori tidak ada";
-  if (!kategori.active) return "Kategori nonaktif";
+  if (!it.featured) return "Belum ditampilkan";
+  if (!it.active) return "Produk dinonaktifkan";
+  if (!penyedia) return "Penyedia sudah dihapus";
+  if (!penyedia.active) return "Penyedia dinonaktifkan";
+  if (!kategori) return "Kategori sudah dihapus";
+  if (!kategori.active) return "Kategori dinonaktifkan";
   return "";
 }

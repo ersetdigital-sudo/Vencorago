@@ -9,7 +9,7 @@ import { KATALOG_TAG } from "@/lib/catalog";
    Satu-satunya pintu tulis katalog.
 
    - GET  : seluruh isi katalog apa adanya (termasuk yang nonaktif) untuk panel
-            admin /admin/katalog. Wajib sesi admin.
+            admin /admin/produk dan /admin/katalog. Wajib sesi admin.
    - POST : { entity, op, data } → simpan (`simpan`) atau hapus (`hapus`).
 
    Semua query di sini memakai SUPABASE_SERVICE_ROLE_KEY (server-only) karena
@@ -138,9 +138,10 @@ function barisItem(d: Record<string, unknown>) {
     value: angka(d.value, 0, 1e12, 0),
     price: angka(d.price, 0, 1e12, 0),
     featured,
-    /* Hanya item unggulan yang bisa muncul di kartu beranda, jadi labelnya
-       dibersihkan begitu tanda unggulan dilepas. */
-    card_label: featured ? text(d.card_label, 60) : "",
+    /* Label kartu disimpan walau itemnya tidak unggulan: beranda hanya membaca
+       item unggulan, jadi menyimpannya utuh membuat label tidak hilang saat
+       tanda unggulan dimatikan lalu dinyalakan lagi. */
+    card_label: text(d.card_label, 60),
     sort: angka(d.sort, 0, 9999, 99),
     active: d.active !== false,
     updated_at: new Date().toISOString(),

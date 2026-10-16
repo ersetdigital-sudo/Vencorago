@@ -121,6 +121,12 @@ const SV = {
       <path d="M6.5 7l.8 12a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l.8-12" />
     </>
   ),
+  x: (
+    <>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof SV;

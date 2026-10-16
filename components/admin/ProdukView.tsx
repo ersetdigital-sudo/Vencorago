@@ -1,37 +1,72 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import s from "./admin.module.css";
-import { Badge, Card, Empty, Icon } from "./ui";
+import { Badge, Card, Empty, Icon, Pager } from "./ui";
 import { rp, rpShort } from "./data";
 import { downloadCsv, groupBy, toCsv } from "./metrics";
 import { useTx } from "./useTx";
 import { alasanTidakTampil, type DataKatalog, type Entitas, type Item, type Penyedia } from "./katalog";
 
-/* Halaman Produk: tempat mengatur produk yang tampil di beranda.
+/* Halaman Produk: satu-satunya tempat mengatur produk yang dijual.
 
-   Produknya sendiri hidup di tabel `catalog_items` Supabase (128 baris di
-   katalog sekarang) — bukan di tabel transaksi. Karena itu halaman ini membaca
-   katalog lewat /api/catalog (sesi admin, service role), bukan /api/tx:
+   Produknya hidup di tabel `catalog_items` Supabase (128 baris) — bukan di
+   tabel transaksi. Karena itu halaman ini membaca katalog lewat /api/catalog
+   (sesi admin, service role), bukan /api/tx. Bentuk katalognya sendiri
+   (kategori, penyedia, metode bayar) diatur di /admin/katalog.
 
-   - "Kartu Produk Pilihan di beranda" menampilkan produk yang benar-benar
-     dirender beranda, dengan urutan yang sama seperti beranda.
-   - "Semua produk" = satu tabel seluruh produk + pencarian, filter kategori,
-     kolom "Beranda" (tanda unggulan), dan "Label kartu".
+   Alurnya cuma dua bagian:
+   - "Kartu Produk Pilihan di beranda" = produk yang benar-benar dirender
+     beranda, urutannya sama seperti beranda, satu sakelar per baris.
+   - "Semua produk" = satu daftar seluruh produk + pencarian/filter, dan satu
+     panel detail berisi semua field. Ubah harga = buka produk, ubah, Simpan —
+     bukan lagi tabel 9 kolom dengan input di setiap sel.
    - Angka penjualan per produk ikut di bawah, tapi hanya muncul kalau sudah
      ada transaksi — biar halaman ini tidak pernah tampil seolah kosong.
 
    Setiap perubahan lewat /api/catalog dan cache tag `katalog` di-revalidate,
    jadi beranda ikut berubah tanpa deploy ulang. */
 
+const PAGE_SIZE = 12;
+
+const FILTER = [
+  { v: "semua", label: "Semua" },
+  { v: "aktif", label: "Aktif" },
+  { v: "nonaktif", label: "Nonaktif" },
+  { v: "beranda", label: "Tampil di beranda" },
+] as const;
+
+type Filter = (typeof FILTER)[number]["v"];
+
+type Pesan = { ok: boolean; text: string };
+
+/** Produk baru: id 0 = belum ada di database, /api/catalog yang membuatnya. */
+function produkKosong(providerId: number, sort: number): Item {
+  return {
+    id: 0,
+    provider_id: providerId,
+    name: "",
+    note: "",
+    value: 0,
+    price: 0,
+    featured: false,
+    card_label: "",
+    sort,
+    active: true,
+  };
+}
+
 export default function ProdukView() {
   const [data, setData] = useState<DataKatalog | null>(null);
   const [galat, setGalat] = useState("");
-  const [pesan, setPesan] = useState("");
+  const [pesan, setPesan] = useState<Pesan | null>(null);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
   const [slug, setSlug] = useState("");
-  const [hanyaTampil, setHanyaTampil] = useState(false);
+  const [filter, setFilter] = useState<Filter>("semua");
+  const [page, setPage] = useState(1);
+  const [panel, setPanel] = useState<{ id: number | null } | null>(null);
+  const [panelKotor, setPanelKotor] = useState(false);
   const { tx } = useTx();
 
   const muat = useCallback(async () => {
@@ -44,10 +79,10 @@ export default function ProdukView() {
       } else {
         setGalat(
           j.code === "not-configured"
-            ? "SUPABASE_SERVICE_ROLE_KEY belum di-set — produk tidak bisa dibuka."
+            ? "Supabase belum di-set di server ini — produk tidak bisa dibuka."
             : j.code === "unauthorized"
               ? "Sesi admin sudah berakhir. Muat ulang halaman lalu masuk lagi."
-              : "Gagal memuat produk dari Supabase."
+              : "Produk tidak bisa dimuat dari Supabase. Coba muat ulang."
         );
       }
     } catch {
@@ -60,9 +95,14 @@ export default function ProdukView() {
   }, [muat]);
 
   const kirim = useCallback(
-    async (entity: Entitas, op: "simpan" | "hapus", payload: Record<string, unknown>, sukses: string) => {
+    async (
+      entity: Entitas,
+      op: "simpan" | "hapus",
+      payload: Record<string, unknown>,
+      sukses: string
+    ): Promise<boolean> => {
       setBusy(true);
-      setPesan("");
+      setPesan(null);
       try {
         const r = await fetch("/api/catalog", {
           method: "POST",
@@ -72,12 +112,17 @@ export default function ProdukView() {
         const j = (await r.json().catch(() => ({}))) as DataKatalog;
         if (r.ok && j.ok) {
           setData(j);
-          setPesan(sukses + " Beranda sudah memakai data ini.");
-        } else {
-          setPesan(`Gagal menyimpan (${j.code ?? r.status})${j.detail ? ": " + j.detail : ""}`);
+          setPesan({ ok: true, text: sukses + " Beranda sudah memakai data ini." });
+          return true;
         }
+        setPesan({
+          ok: false,
+          text: `Gagal menyimpan (${j.code ?? r.status})${j.detail ? ": " + j.detail : ""}`,
+        });
+        return false;
       } catch {
-        setPesan("Gagal menyimpan: jaringan bermasalah.");
+        setPesan({ ok: false, text: "Gagal menyimpan: jaringan bermasalah." });
+        return false;
       } finally {
         setBusy(false);
       }
@@ -105,6 +150,9 @@ export default function ProdukView() {
         <p className={s.pageSub}>{sub}</p>
       </div>
       <div className={s.pageAction}>
+        <a className={`${s.btn} ${s.btnSm}`} href="/admin/katalog">
+          <Icon n="inbox" /> Kategori & metode
+        </a>
         <a className={`${s.btn} ${s.btnSm}`} href="/" target="_blank" rel="noreferrer">
           <Icon n="external" /> Lihat beranda
         </a>
@@ -144,13 +192,18 @@ export default function ProdukView() {
   };
 
   const diBeranda = data.items.filter((it) => it.featured).sort(urut);
-  const tampil = diBeranda.filter((it) => !alasanTidakTampil(it, penyediaDari(it.provider_id), katItem(it)));
+  const terhalang = diBeranda.filter((it) =>
+    alasanTidakTampil(it, penyediaDari(it.provider_id), katItem(it))
+  );
+  const tampil = diBeranda.length - terhalang.length;
 
   const cari = q.trim().toLowerCase();
   const cocok = (it: Item) => {
     const p = penyediaDari(it.provider_id);
     if (slug && p?.category_slug !== slug) return false;
-    if (hanyaTampil && !it.featured) return false;
+    if (filter === "aktif" && !it.active) return false;
+    if (filter === "nonaktif" && it.active) return false;
+    if (filter === "beranda" && !it.featured) return false;
     if (!cari) return true;
     return [it.name, it.note, it.card_label, p?.name ?? "", katItem(it)?.name ?? ""]
       .join(" ")
@@ -159,22 +212,38 @@ export default function ProdukView() {
   };
   const baris = data.items.filter(cocok).sort(urut);
 
+  const halaman = Math.max(1, Math.ceil(baris.length / PAGE_SIZE));
+  const ini = Math.min(page, halaman);
+  const potong = baris.slice((ini - 1) * PAGE_SIZE, ini * PAGE_SIZE);
+
+  const itemPanel = panel && panel.id !== null ? data.items.find((i) => i.id === panel.id) : null;
+  const panelTerbuka = panel !== null && (panel.id === null || itemPanel !== undefined);
+
+  const bukaPanel = (id: number | null) => {
+    if (panelKotor && !confirm("Perubahan di panel belum disimpan. Buang?")) return;
+    setPanelKotor(false);
+    setPanel({ id });
+  };
+  const tutupPanel = () => {
+    if (panelKotor && !confirm("Perubahan di panel belum disimpan. Buang?")) return;
+    setPanelKotor(false);
+    setPanel(null);
+  };
+
   return (
     <>
-      {kepala(`${data.items.length} produk · ${tampil.length} tampil di beranda`)}
+      {kepala(`${data.items.length} produk · ${tampil} tampil di beranda`)}
       {pesan ? (
-        <Card>
-          <p style={{ margin: 0, fontSize: 13 }}>{pesan}</p>
-        </Card>
+        <div className={s.pesanBar} role="status">
+          <Badge tone={pesan.ok ? "ok" : "bad"}>{pesan.ok ? "Tersimpan" : "Gagal"}</Badge>
+          <span>{pesan.text}</span>
+        </div>
       ) : null}
 
-      <Card
-        title="Kartu Produk Pilihan di beranda"
-        note={`${tampil.length} tampil · ${diBeranda.length - tampil.length} bermasalah`}
-      >
+      <Card title="Kartu Produk Pilihan di beranda" note={`${tampil} tampil · ${diBeranda.length} dipilih`}>
         {diBeranda.length === 0 ? (
           <Empty title="Belum ada produk yang tampil di beranda">
-            Centang kolom “Beranda” pada tabel di bawah, lalu isi “Label kartu”.
+            Buka salah satu produk di bawah, lalu nyalakan “Tampil di beranda”.
           </Empty>
         ) : (
           <div className={s.rankList}>
@@ -188,29 +257,48 @@ export default function ProdukView() {
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       {it.card_label || <i style={{ color: "var(--fg-muted)" }}>{it.name}</i>}
-                      <small>
-                        {katItem(it)?.name ?? "—"} · {penyediaDari(it.provider_id)?.name ?? "—"} ·{" "}
-                        {rp(it.price)}
-                      </small>
+                      {!it.card_label ? (
+                        <span className={s.listHint}>label: pakai nama produk</span>
+                      ) : null}
                     </div>
                     <div className={s.rankSub}>
-                      {kenapa ? <Badge tone="warn">{kenapa} — tidak muncul di beranda</Badge> : null}
+                      {katItem(it)?.name ?? "—"} · {penyediaDari(it.provider_id)?.name ?? "—"} · {rp(it.price)}
                     </div>
+                    {kenapa ? (
+                      <div className={s.rankSub}>
+                        <Badge tone="warn">{kenapa} — belum muncul di beranda</Badge>
+                        {!it.active ? (
+                          <button
+                            className={`${s.btn} ${s.btnSm}`}
+                            style={{ marginLeft: 8 }}
+                            disabled={busy}
+                            onClick={() =>
+                              void kirim("item", "simpan", { ...it, active: true }, `“${it.name}” diaktifkan.`)
+                            }
+                          >
+                            <Icon n="check" /> Aktifkan
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
-                  <div className={s.cellRight} style={{ whiteSpace: "nowrap" }}>
-                    <button
-                      className={`${s.btn} ${s.btnSm}`}
+                  <div className={s.listRight}>
+                    <Switch
+                      checked
                       disabled={busy}
-                      onClick={() =>
+                      label="Tampil"
+                      title="Matikan untuk melepas produk ini dari beranda"
+                      onChange={() =>
                         void kirim(
                           "item",
                           "simpan",
-                          { ...it, featured: false, card_label: "" },
+                          { ...it, featured: false },
                           `“${it.name}” dilepas dari beranda.`
                         )
                       }
-                    >
-                      Lepas
+                    />
+                    <button className={`${s.btn} ${s.btnSm}`} onClick={() => bukaPanel(it.id)}>
+                      Ubah
                     </button>
                   </div>
                 </div>
@@ -220,54 +308,135 @@ export default function ProdukView() {
         )}
       </Card>
 
-      <Card title="Semua produk" note={`${baris.length} dari ${data.items.length} baris`}>
-        <div className={s.toolbar}>
-          <div className={s.toolbarSearch}>
-            <Icon n="search" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Cari nama produk, penyedia, atau kategori"
-              aria-label="Cari produk"
+      <div className={panelTerbuka ? s.panelWrap : undefined}>
+        <Card title="Semua produk" note={`${baris.length} dari ${data.items.length} produk`}>
+          <div className={s.toolbar}>
+            <div className={s.toolbarSearch}>
+              <Icon n="search" />
+              <input
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Cari nama produk, penyedia, atau kategori"
+                aria-label="Cari produk"
+              />
+            </div>
+
+            <select
+              className={`${s.field} ${s.toolbarSelect}`}
+              value={slug}
+              aria-label="Filter kategori"
+              onChange={(e) => {
+                setSlug(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Semua kategori</option>
+              {data.cats.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <div className={s.segmented} role="group" aria-label="Filter status produk">
+              {FILTER.map((f) => (
+                <button
+                  key={f.v}
+                  className={s.seg}
+                  aria-pressed={filter === f.v}
+                  onClick={() => {
+                    setFilter(f.v);
+                    setPage(1);
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className={`${s.btn} ${s.btnPrimary} ${s.btnSm} ${s.toolbarEnd}`}
+              onClick={() => bukaPanel(null)}
+            >
+              <Icon n="check" /> Produk baru
+            </button>
+          </div>
+
+          <div className={s.list}>
+            {potong.map((it) => {
+              const kat = katItem(it);
+              return (
+                <button className={s.listRow} key={it.id} onClick={() => bukaPanel(it.id)}>
+                  <span className={s.listBody}>
+                    <span className={s.listTitle}>
+                      {it.name}
+                      {!it.active ? <Badge tone="bad">Nonaktif</Badge> : null}
+                      {it.featured ? <Badge tone="accent">Tampil di beranda</Badge> : null}
+                    </span>
+                    <span className={s.listSub}>
+                      {kat?.name ?? "—"} · {penyediaDari(it.provider_id)?.name ?? "—"} ·{" "}
+                      <b className={s.num}>{rp(it.price)}</b>
+                      {kat?.kind === "nominal" ? ` · nominal ${rp(it.value)}` : ""}
+                      {it.note ? ` · ${it.note}` : ""}
+                    </span>
+                  </span>
+                  <span className={s.listAction}>
+                    Ubah
+                    <Icon n="right" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {baris.length === 0 ? <Empty title="Tidak ada produk yang cocok dengan filter ini" /> : null}
+
+          {baris.length > PAGE_SIZE ? (
+            <Pager
+              page={ini}
+              pages={halaman}
+              total={baris.length}
+              from={(ini - 1) * PAGE_SIZE + 1}
+              to={Math.min(ini * PAGE_SIZE, baris.length)}
+              onPrev={() => setPage(Math.max(1, ini - 1))}
+              onNext={() => setPage(Math.min(halaman, ini + 1))}
             />
-          </div>
+          ) : null}
+        </Card>
 
-          <select
-            className={`${s.field} ${s.toolbarSelect}`}
-            value={slug}
-            aria-label="Filter kategori"
-            onChange={(e) => setSlug(e.target.value)}
-          >
-            <option value="">Semua kategori</option>
-            {data.cats.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <div className={s.segmented} role="group" aria-label="Filter kartu beranda">
-            <button className={s.seg} aria-pressed={!hanyaTampil} onClick={() => setHanyaTampil(false)}>
-              Semua
-            </button>
-            <button className={s.seg} aria-pressed={hanyaTampil} onClick={() => setHanyaTampil(true)}>
-              Tampil di beranda
-            </button>
-          </div>
-        </div>
-
-        <TabelProduk
-          baris={baris}
-          data={data}
-          busy={busy}
-          onSimpan={(b) => void kirim("item", "simpan", { ...b }, `Produk “${b.name}” disimpan.`)}
-          onHapus={(b) => {
-            if (!confirm(`Hapus produk “${b.name}”?`)) return;
-            void kirim("item", "hapus", { id: b.id }, `Produk “${b.name}” dihapus.`);
-          }}
-          onTambah={(b) => void kirim("item", "simpan", { ...b }, `Produk “${b.name}” ditambahkan.`)}
-        />
-      </Card>
+        {panelTerbuka ? (
+          <PanelProduk
+            key={panel.id ?? "baru"}
+            data={data}
+            item={itemPanel ?? null}
+            busy={busy}
+            onKotor={setPanelKotor}
+            onTutup={tutupPanel}
+            onSimpan={async (draft) => {
+              const ok = await kirim(
+                "item",
+                "simpan",
+                { ...draft },
+                itemPanel ? `Produk “${draft.name}” disimpan.` : `Produk “${draft.name}” ditambahkan.`
+              );
+              if (ok) {
+                setPanelKotor(false);
+                setPanel(null);
+              }
+              return ok;
+            }}
+            onHapus={(draft) => {
+              if (!confirm(`Hapus produk “${draft.name}”?`)) return;
+              void kirim("item", "hapus", { id: draft.id }, `Produk “${draft.name}” dihapus.`);
+              setPanelKotor(false);
+              setPanel(null);
+            }}
+          />
+        ) : null}
+      </div>
 
       {prods.length > 0 ? (
         <>
@@ -302,8 +471,12 @@ export default function ProdukView() {
                       <td data-label="Kategori">
                         <Badge tone="info">{p.label}</Badge>
                       </td>
-                      <td data-label="Transaksi" className={`${s.cellRight} ${s.num}`}>{p.count}</td>
-                      <td data-label="Pendapatan" className={`${s.cellRight} ${s.num} ${s.cellStrong}`}>{rp(p.revenue)}</td>
+                      <td data-label="Transaksi" className={`${s.cellRight} ${s.num}`}>
+                        {p.count}
+                      </td>
+                      <td data-label="Pendapatan" className={`${s.cellRight} ${s.num} ${s.cellStrong}`}>
+                        {rp(p.revenue)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -351,275 +524,256 @@ export default function ProdukView() {
   );
 }
 
-/* --------------------------------------------------------------- tabel -- */
+/* --------------------------------------------------------------- sakelar -- */
 
-function TabelProduk({
-  baris,
+/** Sakelar on/off: checkbox asli (tetap bisa di-Tab) dengan tampilan track+thumb. */
+function Switch({
+  checked,
+  onChange,
+  label,
+  disabled = false,
+  title,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  disabled?: boolean;
+  title?: string;
+}) {
+  return (
+    <label className={s.switch} title={title}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className={s.switchTrack} aria-hidden="true" />
+      <span className={s.switchText}>{label}</span>
+    </label>
+  );
+}
+
+/* ----------------------------------------------------------------- panel -- */
+
+/** Detail satu produk: semua field ada di sini, satu tombol Simpan untuk semuanya. */
+function PanelProduk({
   data,
+  item,
   busy,
   onSimpan,
   onHapus,
-  onTambah,
+  onTutup,
+  onKotor,
 }: {
-  baris: Item[];
   data: DataKatalog;
+  item: Item | null;
   busy: boolean;
-  onSimpan: (b: Item) => void;
-  onHapus: (b: Item) => void;
-  onTambah: (b: Omit<Item, "id">) => void;
+  onSimpan: (draft: Item) => Promise<boolean>;
+  onHapus: (draft: Item) => void;
+  onTutup: () => void;
+  onKotor: (kotor: boolean) => void;
 }) {
-  const [draft, setDraft] = useState<Record<number, Item>>({});
-  const penyediaPertama = data.providers.find((p) => p.category_slug === data.cats[0]?.slug);
-  const kosong: Omit<Item, "id"> = {
-    provider_id: penyediaPertama?.id ?? data.providers[0]?.id ?? 0,
-    name: "",
-    note: "",
-    value: 0,
-    price: 0,
-    featured: false,
-    card_label: "",
-    sort: data.items.length + 1,
-    active: true,
-  };
-  const [baru, setBaru] = useState<Omit<Item, "id">>(kosong);
+  const awal = useMemo<Item>(
+    () =>
+      item ??
+      produkKosong(
+        data.providers.find((p) => p.category_slug === data.cats[0]?.slug)?.id ??
+          data.providers[0]?.id ??
+          0,
+        data.items.length + 1
+      ),
+    [item, data]
+  );
+  const [draft, setDraft] = useState<Item>(awal);
+  const kotor = JSON.stringify(draft) !== JSON.stringify(awal);
 
-  const ubah = (it: Item, k: keyof Item, v: unknown) =>
-    setDraft((prev) => ({ ...prev, [it.id]: { ...(prev[it.id] ?? it), [k]: v } as Item }));
-  const nilai = (it: Item) => draft[it.id] ?? it;
+  useEffect(() => {
+    onKotor(kotor);
+  }, [kotor, onKotor]);
 
-  const penyedia = (id: number) => data.providers.find((p) => p.id === id);
-  const kategori = (id: number) => {
-    const p = penyedia(id);
-    return p ? data.cats.find((c) => c.slug === p.category_slug) : undefined;
+  const penyedia = data.providers.find((p) => p.id === draft.provider_id);
+  const kat = data.cats.find((c) => c.slug === penyedia?.category_slug) ?? data.cats[0];
+  const penyediaKat = data.providers.filter((p) => p.category_slug === kat?.slug);
+  const siap = draft.name.trim() !== "" && draft.provider_id > 0;
+
+  const simpan = async () => {
+    /* Label kartu diisi dari nama produk kalau dibiarkan kosong, jadi yang
+       tersimpan selalu nilai eksplisit — tidak perlu diisi ulang kalau produk
+       dilepas lalu diunggulkan lagi. Panelnya ditutup oleh pemanggil setelah
+       simpan berhasil, supaya penutupan itu tidak kena pemeriksaan
+       "belum disimpan" (isinya memang masih dianggap berubah sampai data
+       barunya masuk). */
+    const bersih: Item = {
+      ...draft,
+      card_label: draft.card_label || (draft.featured ? draft.name : ""),
+    };
+    await onSimpan(bersih);
   };
-  const penyediaBaru = data.providers.filter(
-    (p) => p.category_slug === kategori(baru.provider_id)?.slug
+
+  const Baris = ({ label, children }: { label: string; children: ReactNode }) => (
+    <tr>
+      <td>{label}</td>
+      <td>{children}</td>
+    </tr>
   );
 
   return (
-    <div className={s.tableWrap}>
-      <table className={`${s.table} ${s.tableStack}`}>
-        <thead>
-          <tr>
-            <th>Kategori</th>
-            <th>Produk</th>
-            <th className={s.cellRight}>Nominal</th>
-            <th className={s.cellRight}>Harga jual</th>
-            <th>Beranda</th>
-            <th>Label kartu</th>
-            <th className={s.cellRight}>Urutan</th>
-            <th>Status</th>
-            <th className={s.cellRight}>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {baris.map((it) => {
-            const b = nilai(it);
-            const kotor = draft[it.id] !== undefined;
-            const kat = kategori(it.provider_id);
-            return (
-              <tr key={it.id} style={{ cursor: "default" }}>
-                <td data-label="Kategori">
-                  <span className={s.cellStrong}>{kat?.name ?? "—"}</span>
-                  <span className={s.cellHint}>{penyedia(it.provider_id)?.name ?? "—"}</span>
-                </td>
-                <td data-label="Produk">
-                  <input
-                    className={`${s.field} ${s.cellInput}`}
-                    value={b.name}
-                    onChange={(e) => ubah(it, "name", e.target.value)}
-                  />
-                  <input
-                    className={`${s.field} ${s.cellInput}`}
-                    style={{ marginTop: 6, fontSize: 12 }}
-                    placeholder="Keterangan (opsional)"
-                    value={b.note}
-                    onChange={(e) => ubah(it, "note", e.target.value)}
-                  />
-                </td>
-                <td data-label="Nominal">
-                  <input
-                    className={`${s.field} ${s.cellNum}`}
-                    type="number"
-                    value={b.value}
-                    onChange={(e) => ubah(it, "value", Number(e.target.value))}
-                  />
-                </td>
-                <td data-label="Harga jual">
-                  <input
-                    className={`${s.field} ${s.cellNum}`}
-                    type="number"
-                    value={b.price}
-                    onChange={(e) => ubah(it, "price", Number(e.target.value))}
-                  />
-                </td>
-                <td data-label="Beranda">
-                  <input
-                    className={s.cellCheck}
-                    type="checkbox"
-                    title="Tampilkan sebagai kartu Produk Pilihan di beranda"
-                    checked={b.featured}
-                    onChange={(e) => ubah(it, "featured", e.target.checked)}
-                  />
-                </td>
-                <td data-label="Label kartu">
-                  <input
-                    className={`${s.field} ${s.cellInput}`}
-                    placeholder={b.featured ? "Contoh: Saldo DANA" : "—"}
-                    disabled={!b.featured}
-                    value={b.card_label}
-                    onChange={(e) => ubah(it, "card_label", e.target.value)}
-                  />
-                </td>
-                <td data-label="Urutan">
-                  <input
-                    className={`${s.field} ${s.cellNum}`}
-                    style={{ width: 76 }}
-                    type="number"
-                    value={b.sort}
-                    onChange={(e) => ubah(it, "sort", Number(e.target.value))}
-                  />
-                </td>
-                <td data-label="Status">
-                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <input
-                      className={s.cellCheck}
-                      type="checkbox"
-                      checked={b.active}
-                      onChange={(e) => ubah(it, "active", e.target.checked)}
-                    />
-                    <Badge tone={b.active ? "ok" : "bad"}>{b.active ? "Aktif" : "Nonaktif"}</Badge>
-                  </label>
-                </td>
-                <td className={s.cellRight} data-label="Aksi" style={{ whiteSpace: "nowrap" }}>
-                  <button
-                    className={`${s.btn} ${s.btnSm} ${kotor ? s.btnPrimary : ""}`}
-                    disabled={busy || !kotor}
-                    onClick={() => onSimpan(b)}
-                  >
-                    Simpan
-                  </button>{" "}
-                  <button
-                    className={`${s.btn} ${s.btnSm}`}
-                    disabled={busy}
-                    aria-label={`Hapus produk ${it.name}`}
-                    onClick={() => onHapus(it)}
-                  >
-                    <Icon n="trash" />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+    <>
+      <div className={s.sheetScrim} onClick={onTutup} aria-hidden="true" />
+      <aside className={s.panelCard} aria-label={item ? `Ubah ${item.name}` : "Produk baru"}>
+        <header className={s.panelHead}>
+          <div>
+            <h2 className={s.cardTitle}>{item ? item.name : "Produk baru"}</h2>
+            <span className={s.cardNote}>
+              {item ? `${kat?.name ?? "—"} · ${penyedia?.name ?? "—"}` : "Belum disimpan"}
+            </span>
+          </div>
+          <button className={s.iconBtn} onClick={onTutup} aria-label="Tutup panel" title="Tutup">
+            <Icon n="x" />
+          </button>
+        </header>
 
-          <tr style={{ cursor: "default" }}>
-            <td data-label="Kategori">
-              <select
-                className={`${s.field} ${s.cellSelect}`}
-                aria-label="Kategori produk baru"
-                value={kategori(baru.provider_id)?.slug ?? ""}
-                onChange={(e) => {
-                  const p = data.providers.find((x) => x.category_slug === e.target.value);
-                  setBaru({ ...baru, provider_id: p?.id ?? 0 });
-                }}
-              >
-                {data.cats.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={`${s.field} ${s.cellSelect}`}
-                style={{ marginTop: 6 }}
-                aria-label="Penyedia produk baru"
-                value={baru.provider_id}
-                onChange={(e) => setBaru({ ...baru, provider_id: Number(e.target.value) })}
-              >
-                {penyediaBaru.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </td>
-            <td data-label="Produk">
-              <input
-                className={`${s.field} ${s.cellInput}`}
-                placeholder="Nama produk baru"
-                value={baru.name}
-                onChange={(e) => setBaru({ ...baru, name: e.target.value })}
-              />
-              <input
-                className={`${s.field} ${s.cellInput}`}
-                style={{ marginTop: 6, fontSize: 12 }}
-                placeholder="Keterangan (opsional)"
-                value={baru.note}
-                onChange={(e) => setBaru({ ...baru, note: e.target.value })}
-              />
-            </td>
-            <td data-label="Nominal">
-              <input
-                className={`${s.field} ${s.cellNum}`}
-                type="number"
-                value={baru.value}
-                onChange={(e) => setBaru({ ...baru, value: Number(e.target.value) })}
-              />
-            </td>
-            <td data-label="Harga jual">
-              <input
-                className={`${s.field} ${s.cellNum}`}
-                type="number"
-                value={baru.price}
-                onChange={(e) => setBaru({ ...baru, price: Number(e.target.value) })}
-              />
-            </td>
-            <td data-label="Beranda">
-              <input
-                className={s.cellCheck}
-                type="checkbox"
-                title="Tampilkan sebagai kartu Produk Pilihan di beranda"
-                checked={baru.featured}
-                onChange={(e) => setBaru({ ...baru, featured: e.target.checked })}
-              />
-            </td>
-            <td data-label="Label kartu">
-              <input
-                className={`${s.field} ${s.cellInput}`}
-                placeholder={baru.featured ? "Contoh: Saldo DANA" : "—"}
-                disabled={!baru.featured}
-                value={baru.card_label}
-                onChange={(e) => setBaru({ ...baru, card_label: e.target.value })}
-              />
-            </td>
-            <td data-label="Urutan">
-              <input
-                className={`${s.field} ${s.cellNum}`}
-                style={{ width: 76 }}
-                type="number"
-                value={baru.sort}
-                onChange={(e) => setBaru({ ...baru, sort: Number(e.target.value) })}
-              />
-            </td>
-            <td data-label="Status">
-              <span style={{ color: "var(--fg-muted)", fontSize: 12.5 }}>Baris baru</span>
-            </td>
-            <td className={s.cellRight} data-label="Aksi">
-              <button
-                className={`${s.btn} ${s.btnSm}`}
-                disabled={busy || !baru.name || !baru.provider_id}
-                onClick={() => {
-                  onTambah(baru);
-                  setBaru({ ...kosong, sort: data.items.length + 2 });
-                }}
-              >
-                <Icon n="check" /> Tambah
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      {baris.length === 0 ? <Empty title="Tidak ada produk yang cocok dengan filter ini" /> : null}
-    </div>
+        <div className={s.panelBody}>
+          <table className={`${s.table} ${s.prop}`}>
+            <tbody>
+              <Baris label="Kategori">
+                <select
+                  className={`${s.field} ${s.cellSelect}`}
+                  value={kat?.slug ?? ""}
+                  onChange={(e) => {
+                    const p = data.providers.find((x) => x.category_slug === e.target.value);
+                    setDraft({ ...draft, provider_id: p?.id ?? 0 });
+                  }}
+                >
+                  {data.cats.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Baris>
+
+              <Baris label="Penyedia">
+                <select
+                  className={`${s.field} ${s.cellSelect}`}
+                  value={draft.provider_id}
+                  onChange={(e) => setDraft({ ...draft, provider_id: Number(e.target.value) })}
+                >
+                  {penyediaKat.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </Baris>
+
+              <Baris label="Nama produk">
+                <input
+                  className={s.field}
+                  value={draft.name}
+                  placeholder="Contoh: Pulsa Telkomsel 10.000"
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+              </Baris>
+
+              <Baris label="Keterangan">
+                <input
+                  className={s.field}
+                  value={draft.note}
+                  placeholder="Opsional"
+                  onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                />
+              </Baris>
+
+              <Baris label="Nominal">
+                <input
+                  className={`${s.field} ${s.cellNum}`}
+                  type="number"
+                  value={draft.value}
+                  onChange={(e) => setDraft({ ...draft, value: Number(e.target.value) })}
+                />
+                <span className={s.cellHint}>
+                  {kat?.kind === "tagihan"
+                    ? "Jumlah tagihannya; harga jual diisi 0."
+                    : "Nominal yang dipilih pelanggan."}
+                </span>
+              </Baris>
+
+              <Baris label="Harga jual">
+                <input
+                  className={`${s.field} ${s.cellNum}`}
+                  type="number"
+                  value={draft.price}
+                  onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
+                />
+                <span className={s.cellHint}>
+                  Angka yang dibayar pelanggan, belum termasuk biaya admin.
+                </span>
+              </Baris>
+
+              <Baris label="Urutan">
+                <input
+                  className={`${s.field} ${s.cellNum}`}
+                  style={{ width: 110 }}
+                  type="number"
+                  value={draft.sort}
+                  onChange={(e) => setDraft({ ...draft, sort: Number(e.target.value) })}
+                />
+                <span className={s.cellHint}>Menentukan urutan tampil di beranda.</span>
+              </Baris>
+
+              <Baris label="Status">
+                <Switch
+                  checked={draft.active}
+                  label={draft.active ? "Aktif dijual" : "Tidak dijual"}
+                  onChange={(v) => setDraft({ ...draft, active: v })}
+                />
+              </Baris>
+
+              <Baris label="Tampil di beranda">
+                <Switch
+                  checked={draft.featured}
+                  label={draft.featured ? "Tampil" : "Tidak tampil"}
+                  onChange={(v) => setDraft({ ...draft, featured: v })}
+                />
+                <span className={s.cellHint}>Muncul sebagai kartu Produk Pilihan di beranda.</span>
+              </Baris>
+
+              <Baris label="Label kartu">
+                <input
+                  className={s.field}
+                  disabled={!draft.featured}
+                  placeholder={draft.name || "Nama produk"}
+                  value={draft.card_label}
+                  onChange={(e) => setDraft({ ...draft, card_label: e.target.value })}
+                />
+                <span className={s.cellHint}>Kosongkan untuk memakai nama produk.</span>
+              </Baris>
+            </tbody>
+          </table>
+
+          {!siap ? (
+            <p className={s.panelHint}>
+              <Icon n="alert" /> Nama produk dan penyedia wajib diisi sebelum bisa disimpan.
+            </p>
+          ) : null}
+        </div>
+
+        <div className={s.panelFoot}>
+          <button className={`${s.btn} ${s.btnPrimary}`} disabled={busy || !siap} onClick={() => void simpan()}>
+            <Icon n="check" /> Simpan
+          </button>
+          <button className={s.btn} disabled={busy} onClick={onTutup}>
+            Batal
+          </button>
+          {item ? (
+            <button className={`${s.btn} ${s.panelHapus}`} disabled={busy} onClick={() => onHapus(draft)}>
+              <Icon n="trash" /> Hapus
+            </button>
+          ) : null}
+        </div>
+      </aside>
+    </>
   );
 }

@@ -92,10 +92,10 @@ nol selain elemen internal Next sendiri (wrapper 0×0 dan `<next-route-announcer
 Route `/admin` — console operasional untuk memantau performa transaksi.
 
 Halaman: `/admin` (ringkasan, KPI, grafik 7/14/30 hari), `/admin/transaksi` (ledger + filter status +
-pencarian + paginasi + detail baris), `/admin/produk`
-(per kategori, produk, metode bayar — rekap penjualan, dengan ekspor CSV), `/admin/katalog`
-(editor katalog: kategori, penyedia, produk + harga, metode bayar, setelan), dan `/admin/pengaturan`
-(foto QRIS).
+pencarian + paginasi + detail baris), `/admin/produk` (**satu-satunya tempat mengatur produk**:
+pencarian + filter, panel detail berisi semua field, pengaturan kartu "Produk Pilihan" di beranda,
+rekap penjualan per produk dengan ekspor CSV), `/admin/katalog` (editor struktur katalog: kategori,
+penyedia, metode bayar, setelan), dan `/admin/pengaturan` (foto QRIS).
 
 **Sumber datanya.** Order disimpan di tabel `transactions` Supabase dan diakses lewat route server
 `/api/tx` (kunci `SUPABASE_SERVICE_ROLE_KEY`, tidak pernah ke browser) — jadi order dari HP
@@ -148,8 +148,9 @@ layout font yang sama tanpa ikut terkunci.
 
 ## Katalog (kategori, produk, harga, metode bayar)
 
-Katalog **tidak ada di dalam kode**. Semuanya tinggal di tabel Supabase dan bisa diubah dari
-`/admin/katalog` tanpa deploy ulang:
+Katalog **tidak ada di dalam kode**. Semuanya tinggal di tabel Supabase dan bisa diubah dari admin
+tanpa deploy ulang — **produk + harga di `/admin/produk`**, sedangkan bentuk katalognya (kategori,
+penyedia, metode bayar, setelan) di `/admin/katalog`:
 
 | Tabel | Isi |
 | ----- | --- |
@@ -158,6 +159,10 @@ Katalog **tidak ada di dalam kode**. Semuanya tinggal di tabel Supabase dan bisa
 | `catalog_items` | produk jual: nama, keterangan, nominal, **harga jual**, tanda unggulan + label kartu beranda, urutan, status |
 | `payment_methods` | metode bayar + **biaya tambahan** per metode, jenis (`qris`/`va`/`wallet`), awalan nomor VA, ikon |
 | `catalog_settings` | setelan global: `admin_fee`, `default_category` |
+
+**Label kartu beranda opsional.** Produk yang ditandai unggulan (`featured`) muncul sebagai kartu
+"Produk Pilihan" di beranda; kalau `card_label` dibiarkan kosong, beranda memakai nama produknya.
+Jadi tidak ada lagi produk unggulan yang hilang dari beranda cuma karena labelnya belum diisi.
 
 **Harga jual ada di kolom `price`, bukan hasil rumus.** Dulu margin produk dihitung ulang di beberapa
 tempat (rumus Rp 1.000 / Rp 500), sehingga halaman produk, checkout, dan rekap admin bisa menyimpang.
@@ -202,7 +207,7 @@ dan `SUPABASE_SERVICE_ROLE_KEY` — token akses hanya alat setup, tidak dipakai 
 
 ### Verifikasi manual setelah setup
 
-1. Buka `/admin/katalog`, ubah **Harga jual** sebuah produk, klik **Simpan**.
+1. Buka `/admin/produk`, klik sebuah produk, ubah **Harga jual** di panel, klik **Simpan**.
 2. Buka `/produk?k=…` → harga baru langsung terpakai. Buka `/` → pilih kategori → harga di grid
    nominal dan total ikut berubah.
 3. Ubah **biaya admin** atau **biaya metode** di editor → total di langkah pembayaran ikut berubah.
@@ -341,7 +346,7 @@ QRIS dan DANA.
 - **Tangga nominal** (pulsa, top up e-wallet, token PLN) berisi placeholder di tabel
   `catalog_items` — bukan hasil verifikasi supplier. Tidak ada SKU, product ID, harga modal, atau
   harga promo di proyek ini. Saat feed supplier tersedia, ganti isi tabelnya dari panel
-  `/admin/katalog` (atau seed baru), bukan dengan menambah daftar di dalam kode.
+  `/admin/produk` (atau seed baru), bukan dengan menambah daftar di dalam kode.
 - Katalog dibaca tanpa fallback ke kode: kalau Supabase tidak bisa dijangkau, halaman publik
   menampilkan pesan "Katalog belum bisa dimuat" sampai koneksinya kembali.
 - Panduan di `/cara-bayar` dan `components/cara-bayar/CaraBayarView.tsx` masih konten editorial

@@ -14,7 +14,8 @@ export default async function Page(props: PageProps<"/">) {
   const sp = await props.searchParams;
   /* Katalog datang dari Supabase (lib/catalog.server.ts), bukan dari konstanta
      di kode: kategori, nominal, harga, metode bayar, dan biaya admin semuanya
-     bisa diubah dari /admin/katalog tanpa deploy ulang. */
+     bisa diubah dari /admin/produk (produk + harga) dan /admin/katalog
+     (kategori, penyedia, metode) tanpa deploy ulang. */
   const catalog = await loadCatalog();
   return (
     <HomeView

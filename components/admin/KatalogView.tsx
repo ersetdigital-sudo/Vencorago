@@ -3,16 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import s from "./admin.module.css";
 import { Badge, Card, Empty, Icon } from "./ui";
-import type { DataKatalog, Entitas, Item, Kat, Metode, Penyedia, Setelan } from "./katalog";
+import type { DataKatalog, Entitas, Kat, Metode, Penyedia, Setelan } from "./katalog";
 
-/* Editor katalog.
+/* Editor struktur katalog.
 
-   Semua bagian disajikan sebagai tabel dengan kolom yang sama seperti halaman
-   admin lain (Transaksi/Produk), supaya datanya terbaca sebaris-sebaris:
-   - Kategori, Penyedia, Produk & harga, Metode bayar  → tabel data + input
-     langsung di sel.
-   - Detail kategori & Setelan global                   → tabel properti
+   Halaman ini mengatur BENTUK katalog, bukan isi produknya — produk dijual
+   diatur di /admin/produk. Semua bagian disajikan sebagai tabel dengan kolom
+   yang sama seperti halaman admin lain, supaya datanya terbaca sebaris-sebaris:
+   - Kategori, Penyedia, Metode bayar  → tabel data + input langsung di sel.
+   - Detail kategori & Setelan global  → tabel properti
      (label kolom kiri, kontrol kolom kanan).
+
+   Kategori dipilih dengan mengklik barisnya; penyedia di bawahnya mengikuti
+   kategori itu.
 
    Setiap perubahan lewat /api/catalog (server, sesi admin) dan cache halaman
    publik di-revalidate, jadi harga baru langsung terpakai tanpa deploy ulang. */
@@ -42,7 +45,6 @@ export default function KatalogView() {
   const [pesan, setPesan] = useState("");
   const [busy, setBusy] = useState(false);
   const [slug, setSlug] = useState("");
-  const [providerId, setProviderId] = useState<number | null>(null);
 
   const muat = useCallback(async () => {
     try {
@@ -101,13 +103,16 @@ export default function KatalogView() {
         <h1 className={s.pageTitle}>Katalog</h1>
         <p className={s.pageSub}>{sub}</p>
       </div>
-      {data ? (
-        <div className={s.pageAction}>
+      <div className={s.pageAction}>
+        <a className={`${s.btn} ${s.btnSm}`} href="/admin/produk">
+          <Icon n="box" /> Atur produk & harga
+        </a>
+        {data ? (
           <button className={`${s.btn} ${s.btnSm}`} onClick={() => void muat()} disabled={busy}>
             <Icon n="trend" /> Muat ulang
           </button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 
@@ -116,13 +121,11 @@ export default function KatalogView() {
 
   const kat = data.cats.find((c) => c.slug === slug) ?? data.cats[0];
   const penyedia = kat ? data.providers.filter((p) => p.category_slug === kat.slug) : [];
-  const aktif = penyedia.find((p) => p.id === providerId) ?? penyedia[0];
-  const item = aktif ? data.items.filter((i) => i.provider_id === aktif.id) : [];
 
   return (
     <>
       {kepala(
-        `${data.cats.length} kategori · ${data.providers.length} penyedia · ${data.items.length} produk · ${data.methods.length} metode bayar`
+        `${data.cats.length} kategori · ${data.providers.length} penyedia · ${data.methods.length} metode bayar`
       )}
 
       {pesan ? (
@@ -168,10 +171,7 @@ export default function KatalogView() {
             kinds={data.kinds}
             terpilih={kat?.slug ?? ""}
             busy={busy}
-            onPilih={(slugBaru) => {
-              setSlug(slugBaru);
-              setProviderId(null);
-            }}
+            onPilih={setSlug}
             onSimpan={(draft) => void kirim("category", "simpan", draft, `Kategori "${draft.name}" disimpan.`)}
             onHapus={(draft) => {
               if (!confirm(`Hapus kategori "${draft.name}" beserta penyedia dan produknya?`)) return;
@@ -195,64 +195,25 @@ export default function KatalogView() {
         {kat ? (
           <Card
             title={`Penyedia — ${kat.name}`}
-            note={`${penyedia.length} baris · penyedia yang dipilih menentukan daftar produk di bawah`}
-            action={
-              <button
-                className={`${s.btn} ${s.btnSm}`}
-                disabled={busy}
-                onClick={() => {
-                  const nama = prompt("Nama penyedia baru:");
-                  if (!nama) return;
-                  void kirim(
-                    "provider",
-                    "simpan",
-                    { category_slug: kat.slug, name: nama, sort: penyedia.length + 1, active: true },
-                    `Penyedia "${nama}" ditambahkan.`
-                  );
-                }}
-              >
-                <Icon n="check" /> Tambah penyedia
-              </button>
-            }
+            note={`${penyedia.length} baris · tambah penyedia lewat baris baru di bawah tabel`}
           >
             <TabelPenyedia
               penyedia={penyedia}
-              terpilih={aktif?.id ?? 0}
               busy={busy}
-              onPilih={setProviderId}
               onSimpan={(draft) => void kirim("provider", "simpan", draft, `Penyedia "${draft.name}" disimpan.`)}
               onHapus={(draft) => {
                 if (!confirm(`Hapus penyedia "${draft.name}" beserta produknya?`)) return;
                 void kirim("provider", "hapus", { id: draft.id }, "Penyedia dihapus.");
-                setProviderId(null);
               }}
               onTambah={(draft) => void kirim("provider", "simpan", draft, `Penyedia "${draft.name}" ditambahkan.`)}
             />
           </Card>
         ) : null}
 
-        {aktif ? (
-          <TabelItem
-            key={aktif.id}
-            penyedia={aktif}
-            items={item}
-            busy={busy}
-            onSimpan={(baris) =>
-              void kirim("item", "simpan", { ...baris, provider_id: aktif.id }, `Produk "${baris.name}" disimpan.`)
-            }
-            onHapus={(baris) => {
-              if (!confirm(`Hapus produk "${baris.name}"?`)) return;
-              void kirim("item", "hapus", { id: baris.id }, "Produk dihapus.");
-            }}
-            onTambah={(baris) =>
-              void kirim("item", "simpan", { ...baris, provider_id: aktif.id }, "Produk ditambahkan.")
-            }
-          />
-        ) : null}
-
         <TabelMetode
           methods={data.methods}
           methodKinds={data.methodKinds}
+          icons={data.icons}
           busy={busy}
           onSimpan={(m) => void kirim("method", "simpan", m, `Metode "${m.name}" disimpan.`)}
           onHapus={(m) => {
@@ -590,17 +551,13 @@ function DetailKategori({
 
 function TabelPenyedia({
   penyedia,
-  terpilih,
   busy,
-  onPilih,
   onSimpan,
   onHapus,
   onTambah,
 }: {
   penyedia: Penyedia[];
-  terpilih: number;
   busy: boolean;
-  onPilih: (id: number) => void;
   onSimpan: (draft: Penyedia) => void;
   onHapus: (draft: Penyedia) => void;
   onTambah: (draft: Omit<Penyedia, "id">) => void;
@@ -633,11 +590,7 @@ function TabelPenyedia({
             const b = baris(p);
             const kotor = draft[p.id] !== undefined;
             return (
-              <tr
-                key={p.id}
-                className={p.id === terpilih ? s.open : undefined}
-                onClick={() => onPilih(p.id)}
-              >
+              <tr key={p.id} style={{ cursor: "default" }}>
                 <td data-label="Nama penyedia">
                   <input
                     className={`${s.field} ${s.cellInput}`}
@@ -668,10 +621,7 @@ function TabelPenyedia({
                   <button
                     className={`${s.btn} ${s.btnSm} ${kotor ? s.btnPrimary : ""}`}
                     disabled={busy || !kotor}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSimpan(b);
-                    }}
+                    onClick={() => onSimpan(b)}
                   >
                     Simpan
                   </button>{" "}
@@ -679,10 +629,7 @@ function TabelPenyedia({
                     className={`${s.btn} ${s.btnSm}`}
                     disabled={busy}
                     aria-label={`Hapus penyedia ${p.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onHapus(p);
-                    }}
+                    onClick={() => onHapus(p)}
                   >
                     <Icon n="trash" />
                   </button>
@@ -730,248 +677,19 @@ function TabelPenyedia({
   );
 }
 
-/* ---------------------------------------------------------------- produk -- */
-
-function TabelItem({
-  penyedia,
-  items,
-  busy,
-  onSimpan,
-  onHapus,
-  onTambah,
-}: {
-  penyedia: Penyedia;
-  items: Item[];
-  busy: boolean;
-  onSimpan: (baris: Item) => void;
-  onHapus: (baris: Item) => void;
-  onTambah: (baris: Omit<Item, "id">) => void;
-}) {
-  const kosong: Omit<Item, "id"> = {
-    provider_id: penyedia.id,
-    name: "",
-    note: "",
-    value: 0,
-    price: 0,
-    featured: false,
-    card_label: "",
-    sort: items.length + 1,
-    active: true,
-  };
-  const [draft, setDraft] = useState<Record<number, Item>>({});
-  const [baru, setBaru] = useState<Omit<Item, "id">>(kosong);
-  const ubah = (it: Item, k: keyof Item, v: unknown) =>
-    setDraft((prev) => ({ ...prev, [it.id]: { ...(prev[it.id] ?? it), [k]: v } as Item }));
-  const baris = (it: Item) => draft[it.id] ?? it;
-
-  return (
-    <Card
-      title={`Produk & harga — ${penyedia.name}`}
-      note={`${items.length} baris · "Harga jual" adalah angka yang dibayar pelanggan`}
-    >
-      <div className={s.tableWrap}>
-        <table className={`${s.table} ${s.tableStack}`}>
-          <thead>
-            <tr>
-              <th>Nama produk</th>
-              <th>Keterangan</th>
-              <th className={s.cellRight}>Nominal</th>
-              <th className={s.cellRight}>Harga jual</th>
-              <th>Kartu beranda</th>
-              <th>Label kartu</th>
-              <th className={s.cellRight}>Urutan</th>
-              <th>Status</th>
-              <th className={s.cellRight}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((it) => {
-              const b = baris(it);
-              const kotor = draft[it.id] !== undefined;
-              return (
-                <tr key={it.id} style={{ cursor: "default" }}>
-                  <td data-label="Nama produk">
-                    <input
-                      className={`${s.field} ${s.cellInput}`}
-                      value={b.name}
-                      onChange={(e) => ubah(it, "name", e.target.value)}
-                    />
-                  </td>
-                  <td data-label="Keterangan">
-                    <input
-                      className={`${s.field} ${s.cellInput}`}
-                      value={b.note}
-                      onChange={(e) => ubah(it, "note", e.target.value)}
-                    />
-                  </td>
-                  <td data-label="Nominal">
-                    <input
-                      className={`${s.field} ${s.cellNum}`}
-                      type="number"
-                      value={b.value}
-                      onChange={(e) => ubah(it, "value", Number(e.target.value))}
-                    />
-                  </td>
-                  <td data-label="Harga jual">
-                    <input
-                      className={`${s.field} ${s.cellNum}`}
-                      type="number"
-                      value={b.price}
-                      onChange={(e) => ubah(it, "price", Number(e.target.value))}
-                    />
-                  </td>
-                  <td data-label="Kartu beranda">
-                    <input
-                      className={s.cellCheck}
-                      type="checkbox"
-                      title="Tampilkan sebagai kartu Produk Pilihan di beranda"
-                      checked={b.featured}
-                      onChange={(e) => ubah(it, "featured", e.target.checked)}
-                    />
-                  </td>
-                  <td data-label="Label kartu">
-                    <input
-                      className={`${s.field} ${s.cellInput}`}
-                      placeholder={b.featured ? "Contoh: Saldo DANA" : "—"}
-                      disabled={!b.featured}
-                      value={b.card_label}
-                      onChange={(e) => ubah(it, "card_label", e.target.value)}
-                    />
-                  </td>
-                  <td data-label="Urutan">
-                    <input
-                      className={`${s.field} ${s.cellNum}`}
-                      style={{ width: 76 }}
-                      type="number"
-                      value={b.sort}
-                      onChange={(e) => ubah(it, "sort", Number(e.target.value))}
-                    />
-                  </td>
-                  <td data-label="Status">
-                    <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <input
-                        className={s.cellCheck}
-                        type="checkbox"
-                        checked={b.active}
-                        onChange={(e) => ubah(it, "active", e.target.checked)}
-                      />
-                      <Badge tone={b.active ? "ok" : "bad"}>{b.active ? "Aktif" : "Nonaktif"}</Badge>
-                    </label>
-                  </td>
-                  <td className={s.cellRight} data-label="Aksi" style={{ whiteSpace: "nowrap" }}>
-                    <button
-                      className={`${s.btn} ${s.btnSm} ${kotor ? s.btnPrimary : ""}`}
-                      disabled={busy || !kotor}
-                      onClick={() => onSimpan(b)}
-                    >
-                      Simpan
-                    </button>{" "}
-                    <button
-                      className={`${s.btn} ${s.btnSm}`}
-                      disabled={busy}
-                      aria-label={`Hapus produk ${it.name}`}
-                      onClick={() => onHapus(it)}
-                    >
-                      <Icon n="trash" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-            <tr style={{ cursor: "default" }}>
-              <td data-label="Nama produk">
-                <input
-                  className={`${s.field} ${s.cellInput}`}
-                  placeholder="Nama produk baru"
-                  value={baru.name}
-                  onChange={(e) => setBaru({ ...baru, name: e.target.value })}
-                />
-              </td>
-              <td data-label="Keterangan">
-                <input
-                  className={`${s.field} ${s.cellInput}`}
-                  placeholder="Keterangan"
-                  value={baru.note}
-                  onChange={(e) => setBaru({ ...baru, note: e.target.value })}
-                />
-              </td>
-              <td data-label="Nominal">
-                <input
-                  className={`${s.field} ${s.cellNum}`}
-                  type="number"
-                  value={baru.value}
-                  onChange={(e) => setBaru({ ...baru, value: Number(e.target.value) })}
-                />
-              </td>
-              <td data-label="Harga jual">
-                <input
-                  className={`${s.field} ${s.cellNum}`}
-                  type="number"
-                  value={baru.price}
-                  onChange={(e) => setBaru({ ...baru, price: Number(e.target.value) })}
-                />
-              </td>
-              <td data-label="Kartu beranda">
-                <input
-                  className={s.cellCheck}
-                  type="checkbox"
-                  checked={baru.featured}
-                  onChange={(e) => setBaru({ ...baru, featured: e.target.checked })}
-                />
-              </td>
-              <td data-label="Label kartu">
-                <input
-                  className={`${s.field} ${s.cellInput}`}
-                  placeholder="Label kartu beranda"
-                  disabled={!baru.featured}
-                  value={baru.card_label}
-                  onChange={(e) => setBaru({ ...baru, card_label: e.target.value })}
-                />
-              </td>
-              <td data-label="Urutan">
-                <input
-                  className={`${s.field} ${s.cellNum}`}
-                  style={{ width: 76 }}
-                  type="number"
-                  value={baru.sort}
-                  onChange={(e) => setBaru({ ...baru, sort: Number(e.target.value) })}
-                />
-              </td>
-              <td data-label="Status">
-                <span style={{ color: "var(--fg-muted)", fontSize: 12.5 }}>Baris baru</span>
-              </td>
-              <td className={s.cellRight} data-label="Aksi">
-                <button
-                  className={`${s.btn} ${s.btnSm}`}
-                  disabled={busy || !baru.name}
-                  onClick={() => {
-                    onTambah(baru);
-                    setBaru({ ...kosong, sort: items.length + 2 });
-                  }}
-                >
-                  <Icon n="check" /> Tambah
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      {items.length === 0 ? <Empty title="Belum ada produk" /> : null}
-    </Card>
-  );
-}
-
 /* --------------------------------------------------------------- metode -- */
 
 function TabelMetode({
   methods,
   methodKinds,
+  icons,
   busy,
   onSimpan,
   onHapus,
 }: {
   methods: Metode[];
   methodKinds: string[];
+  icons: string[];
   busy: boolean;
   onSimpan: (m: Metode) => void;
   onHapus: (m: Metode) => void;
@@ -992,6 +710,10 @@ function TabelMetode({
   const ubah = (m: Metode, k: keyof Metode, v: unknown) =>
     setDraft((prev) => ({ ...prev, [m.code]: { ...(prev[m.code] ?? m), [k]: v } as Metode }));
   const baris = (m: Metode) => draft[m.code] ?? m;
+  /* Daftar ikon katalog belum memuat 'qr'/'card' yang sudah dipakai metode di
+     database, jadi pilihannya digabung dengan nilai yang sudah ada supaya nilai
+     lama tidak ikut tertimpa diam-diam saat barisnya disimpan. */
+  const ikon = [...new Set([...icons, ...methods.map((m) => m.icon).filter(Boolean)])];
 
   return (
     <Card
@@ -1075,12 +797,17 @@ function TabelMetode({
                     />
                   </td>
                   <td data-label="Ikon">
-                    <input
-                      className={`${s.field} ${s.cellInput}`}
-                      style={{ minWidth: 88, width: 88 }}
+                    <select
+                      className={`${s.field} ${s.cellSelect}`}
                       value={b.icon}
                       onChange={(e) => ubah(m, "icon", e.target.value)}
-                    />
+                    >
+                      {ikon.map((i) => (
+                        <option key={i} value={i}>
+                          {i}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td data-label="Urutan">
                     <input
@@ -1169,12 +896,17 @@ function TabelMetode({
                 />
               </td>
               <td data-label="Ikon">
-                <input
-                  className={`${s.field} ${s.cellInput}`}
-                  style={{ minWidth: 88, width: 88 }}
+                <select
+                  className={`${s.field} ${s.cellSelect}`}
                   value={baru.icon}
                   onChange={(e) => setBaru({ ...baru, icon: e.target.value })}
-                />
+                >
+                  {ikon.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
               </td>
               <td data-label="Urutan">
                 <input
