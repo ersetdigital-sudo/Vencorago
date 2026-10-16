@@ -282,7 +282,7 @@ export default function ProdukView() {
             }
           >
             <div className={s.tableWrap}>
-              <table className={s.table}>
+              <table className={`${s.table} ${s.tableStack}`}>
                 <thead>
                   <tr>
                     <th>Produk</th>
@@ -294,17 +294,17 @@ export default function ProdukView() {
                 <tbody>
                   {prods.slice(0, 12).map((p, i) => (
                     <tr key={p.key} style={{ cursor: "default" }}>
-                      <td>
+                      <td data-label="Produk">
                         <span className={s.rankIdx} style={{ marginRight: 8 }}>
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <span className={s.cellStrong}>{p.key}</span>
                       </td>
-                      <td>
+                      <td data-label="Kategori">
                         <Badge tone="info">{p.label}</Badge>
                       </td>
-                      <td className={`${s.cellRight} ${s.num}`}>{p.count}</td>
-                      <td className={`${s.cellRight} ${s.num} ${s.cellStrong}`}>{rp(p.revenue)}</td>
+                      <td data-label="Transaksi" className={`${s.cellRight} ${s.num}`}>{p.count}</td>
+                      <td data-label="Pendapatan" className={`${s.cellRight} ${s.num} ${s.cellStrong}`}>{rp(p.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -399,7 +399,7 @@ function TabelProduk({
 
   return (
     <div className={s.tableWrap}>
-      <table className={s.table}>
+      <table className={`${s.table} ${s.tableStack}`}>
         <thead>
           <tr>
             <th>Kategori</th>
@@ -420,11 +420,11 @@ function TabelProduk({
             const kat = kategori(it.provider_id);
             return (
               <tr key={it.id} style={{ cursor: "default" }}>
-                <td>
+                <td data-label="Kategori">
                   <span className={s.cellStrong}>{kat?.name ?? "—"}</span>
                   <span className={s.cellHint}>{penyedia(it.provider_id)?.name ?? "—"}</span>
                 </td>
-                <td>
+                <td data-label="Produk">
                   <input
                     className={`${s.field} ${s.cellInput}`}
                     value={b.name}
@@ -438,7 +438,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "note", e.target.value)}
                   />
                 </td>
-                <td>
+                <td data-label="Nominal">
                   <input
                     className={`${s.field} ${s.cellNum}`}
                     type="number"
@@ -446,7 +446,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "value", Number(e.target.value))}
                   />
                 </td>
-                <td>
+                <td data-label="Harga jual">
                   <input
                     className={`${s.field} ${s.cellNum}`}
                     type="number"
@@ -454,7 +454,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "price", Number(e.target.value))}
                   />
                 </td>
-                <td>
+                <td data-label="Beranda">
                   <input
                     className={s.cellCheck}
                     type="checkbox"
@@ -463,7 +463,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "featured", e.target.checked)}
                   />
                 </td>
-                <td>
+                <td data-label="Label kartu">
                   <input
                     className={`${s.field} ${s.cellInput}`}
                     placeholder={b.featured ? "Contoh: Saldo DANA" : "—"}
@@ -472,7 +472,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "card_label", e.target.value)}
                   />
                 </td>
-                <td>
+                <td data-label="Urutan">
                   <input
                     className={`${s.field} ${s.cellNum}`}
                     style={{ width: 76 }}
@@ -481,7 +481,7 @@ function TabelProduk({
                     onChange={(e) => ubah(it, "sort", Number(e.target.value))}
                   />
                 </td>
-                <td>
+                <td data-label="Status">
                   <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                     <input
                       className={s.cellCheck}
@@ -492,7 +492,7 @@ function TabelProduk({
                     <Badge tone={b.active ? "ok" : "bad"}>{b.active ? "Aktif" : "Nonaktif"}</Badge>
                   </label>
                 </td>
-                <td className={s.cellRight} style={{ whiteSpace: "nowrap" }}>
+                <td className={s.cellRight} data-label="Aksi" style={{ whiteSpace: "nowrap" }}>
                   <button
                     className={`${s.btn} ${s.btnSm} ${kotor ? s.btnPrimary : ""}`}
                     disabled={busy || !kotor}
@@ -514,7 +514,7 @@ function TabelProduk({
           })}
 
           <tr style={{ cursor: "default" }}>
-            <td>
+            <td data-label="Kategori">
               <select
                 className={`${s.field} ${s.cellSelect}`}
                 aria-label="Kategori produk baru"
@@ -544,7 +544,7 @@ function TabelProduk({
                 ))}
               </select>
             </td>
-            <td>
+            <td data-label="Produk">
               <input
                 className={`${s.field} ${s.cellInput}`}
                 placeholder="Nama produk baru"
@@ -559,7 +559,7 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, note: e.target.value })}
               />
             </td>
-            <td>
+            <td data-label="Nominal">
               <input
                 className={`${s.field} ${s.cellNum}`}
                 type="number"
@@ -567,7 +567,7 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, value: Number(e.target.value) })}
               />
             </td>
-            <td>
+            <td data-label="Harga jual">
               <input
                 className={`${s.field} ${s.cellNum}`}
                 type="number"
@@ -575,7 +575,7 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, price: Number(e.target.value) })}
               />
             </td>
-            <td>
+            <td data-label="Beranda">
               <input
                 className={s.cellCheck}
                 type="checkbox"
@@ -584,7 +584,7 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, featured: e.target.checked })}
               />
             </td>
-            <td>
+            <td data-label="Label kartu">
               <input
                 className={`${s.field} ${s.cellInput}`}
                 placeholder={baru.featured ? "Contoh: Saldo DANA" : "—"}
@@ -593,7 +593,7 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, card_label: e.target.value })}
               />
             </td>
-            <td>
+            <td data-label="Urutan">
               <input
                 className={`${s.field} ${s.cellNum}`}
                 style={{ width: 76 }}
@@ -602,10 +602,10 @@ function TabelProduk({
                 onChange={(e) => setBaru({ ...baru, sort: Number(e.target.value) })}
               />
             </td>
-            <td>
+            <td data-label="Status">
               <span style={{ color: "var(--fg-muted)", fontSize: 12.5 }}>Baris baru</span>
             </td>
-            <td className={s.cellRight}>
+            <td className={s.cellRight} data-label="Aksi">
               <button
                 className={`${s.btn} ${s.btnSm}`}
                 disabled={busy || !baru.name || !baru.provider_id}

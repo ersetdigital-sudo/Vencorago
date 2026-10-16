@@ -1045,6 +1045,25 @@
 .tableWrap {
   overflow-x: auto;
   max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Scrollbar mendatar tipis tapi tetap terlihat: tanpa ini tabel yang lebih
+   lebar dari kartunya tampak seperti terpotong, bukan bisa digeser. */
+.tableWrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  border-radius: var(--r-full);
+  background: var(--border);
 }
 
 .table {
@@ -1054,7 +1073,7 @@
 }
 
 .table th {
-  padding: 0 12px 10px;
+  padding: 0 9px 10px;
   text-align: left;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1067,7 +1086,7 @@
 }
 
 .table td {
-  padding: 12px;
+  padding: 10px 9px;
   border-bottom: 1px solid var(--divider);
   color: var(--fg-secondary);
   vertical-align: middle;
@@ -1093,6 +1112,15 @@
 .cellStrong {
   color: var(--fg);
   font-weight: 600;
+}
+
+/* Keterangan kecil di bawah nilai sel (mis. penyedia di bawah nama kategori).
+   Selalu di baris sendiri supaya tidak menempel di kolom yang sempit. */
+.cellHint {
+  display: block;
+  margin-top: 6px;
+  color: var(--fg-muted);
+  font-size: 11.5px;
 }
 
 .cellRight {
@@ -1348,14 +1376,14 @@
    barisnya tetap terbaca sebagai satu baris data, bukan tumpukan kotak. */
 .table .cellInput {
   width: 100%;
-  min-width: 96px;
+  min-width: 88px;
   height: 34px;
   padding: 6px 10px;
   font-size: 12.5px;
 }
 
 .table .cellNum {
-  width: 92px;
+  width: 80px;
   height: 34px;
   padding: 6px 10px;
   font-size: 12.5px;
@@ -1394,9 +1422,110 @@
   padding-right: 0;
 }
 
-.prop .cellHint {
-  display: block;
-  margin-top: 6px;
-  color: var(--fg-muted);
-  font-size: 11.5px;
+/* ------------------------------------------- tabel di layar sempit ------- */
+
+/* Di bawah 1280px tabel editor 9 kolom sudah tidak muat (butuh ±1000px +
+   panel samping), dan menggeser ke samping sambil menyunting memang tidak
+   nyaman. Jadi barisnya berubah jadi kartu bertumpuk: nama kolom pindah dari
+   thead ke tiap sel lewat data-label. */
+@media (max-width: 1279px) {
+  .tableStack,
+  .tableStack tbody {
+    display: block;
+    min-width: 0;
+  }
+
+  .tableStack thead {
+    display: none;
+  }
+
+  .tableStack tbody tr {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--glass-input);
+  }
+
+  .tableStack tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .tableStack tbody tr:hover,
+  .tableStack tbody tr.open {
+    background: var(--primary-bg);
+  }
+
+  .tableStack td {
+    display: grid;
+    grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .tableStack td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .tableStack td:not([data-label])::before {
+    display: none;
+  }
+
+  /* Sel yang isinya lebih dari satu kontrol (mis. produk + keterangan) menaruh
+     semuanya di kolom kanan, sejajar di bawah label. */
+  .tableStack td > * {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  /* Tombol-tombol aksi tetap berdampingan, bukan bertumpuk jadi dua baris. */
+  .tableStack td[data-label="Aksi"] {
+    grid-template-columns: minmax(78px, 34%) minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .tableStack td[data-label="Aksi"] > * {
+    grid-column: auto;
+    grid-row: 1;
+  }
+
+  .tableStack .cellInput,
+  .tableStack .cellNum,
+  .tableStack .cellSelect {
+    width: 100%;
+  }
+
+  .tableStack .cellNum {
+    text-align: left;
+  }
+
+  .tableStack .cellRight {
+    text-align: left;
+  }
+
+  /* Tabel properti (label ↔ kontrol): labelnya naik ke atas kontrol, bukan
+     kolom 240px yang menyisakan kontrol super sempit. */
+  .prop td {
+    display: block;
+  }
+
+  .prop td:first-child {
+    width: auto;
+    padding: 0 0 6px;
+  }
+
+  .prop td:last-child {
+    padding: 0 0 12px;
+  }
 }
+
