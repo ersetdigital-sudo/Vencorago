@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import Logo from "../Logo";
 import s from "./admin.module.css";
 import { Icon, type IconName } from "./ui";
 import { useTx } from "./useTx";
@@ -38,43 +39,11 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className={`${s.admin} ${collapsed ? s.collapsed : ""}`}>
       <div className={s.shell}>
-        <nav className={s.rail} aria-label="Navigasi admin">
-          <Link className={s.railLogo} href="/admin" aria-label="VENCORAGO admin">
-            <svg viewBox="0 0 40 40" aria-hidden="true">
-              <path
-                d="M11 12l9 17 9-17"
-                fill="none"
-                stroke="#fff"
-                strokeWidth="4.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="29" cy="12" r="3.2" fill="#a7f0e2" />
-            </svg>
+        <nav className={s.panel} id="menu-admin" aria-label="Menu admin">
+          <Link className={s.panelBrand} href="/admin">
+            <Logo className={s.brandMark} lwClass={s.brandWord} />
           </Link>
-          {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={s.railBtn}
-              aria-current={isActive(n.href, pathname) ? "page" : undefined}
-              aria-label={n.label}
-              title={n.label}
-            >
-              <Icon n={n.icon} />
-            </Link>
-          ))}
-          <div className={s.railFoot}>
-            <Link className={s.railBtn} href="/" title="Buka situs publik">
-              <Icon n="external" />
-            </Link>
-            <span className={s.avatar} title="Admin">
-              AD
-            </span>
-          </div>
-        </nav>
 
-        <nav className={s.panel} aria-label="Menu admin">
           <span className={s.panelGroup}>Operasional</span>
           {NAV.map((n) => (
             <Link
@@ -101,9 +70,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <div className={s.content}>
           <header className={s.strip}>
             <button
-              className={s.iconBtn}
+              className={`${s.iconBtn} ${s.menuBtn}`}
               onClick={() => setCollapsed((v) => !v)}
-              aria-pressed={collapsed}
+              aria-expanded={!collapsed}
+              aria-controls="menu-admin"
               aria-label={collapsed ? "Tampilkan menu" : "Sembunyikan menu"}
               title={collapsed ? "Tampilkan menu" : "Sembunyikan menu"}
             >
