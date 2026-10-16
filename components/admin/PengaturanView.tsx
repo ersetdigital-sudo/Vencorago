@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import s from "./admin.module.css";
-import { Badge, Card, Icon, Skeleton } from "./ui";
+import { Card, Icon, Skeleton } from "./ui";
 import { fetchQris, type QrisState } from "@/lib/qris";
 
 /* Pesan error dari kode route /api/qris — disampaikan apa adanya, termasuk
@@ -106,11 +106,6 @@ export default function PengaturanView() {
           <p className={s.pageSub}>
             Foto QRIS untuk halaman bayar publik — tersimpan di Supabase Storage
           </p>
-        </div>
-        <div className={s.pageAction}>
-          <Badge tone={st?.configured ? "ok" : "info"} dot>
-            {st?.configured ? "Supabase aktif" : "Belum terhubung"}
-          </Badge>
         </div>
       </div>
 
