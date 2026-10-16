@@ -179,13 +179,14 @@ demo/prototype, **bukan** keamanan produksi; untuk produksi pindahkan upload ke 
 ### Verifikasi manual setelah setup
 
 1. Buka `/admin` tanpa login → harus dialihkan ke `/admin/login`; masukkan `ADMIN_PASSWORD`.
-2. `/admin/pengaturan` → kartu Koneksi menampilkan **Terhubung** + `qris · publik`.
+2. `/admin/pengaturan` → badge kanan atas menampilkan **Supabase aktif** dan kartu Foto QRIS
+   siap dipakai.
 3. Pilih gambar PNG/JPG/WebP (≤5 MB), klik **Unggah & ganti** → muncul pesan sukses;
    cek isi bucket di Supabase → hanya tersisa 1 file.
-3. Buka `/` → pilih produk → **Bayar Sekarang** dengan metode QRIS → kotak scan menampilkan foto
+4. Buka `/` → pilih produk → **Bayar Sekarang** dengan metode QRIS → kotak scan menampilkan foto
    yang baru diunggah (bukan placeholder).
-4. Ganti foto sekali lagi → file sebelumnya hilang dari bucket, tampilan ikut berganti.
-5. **Hapus foto** → checkout kembali menampilkan QR placeholder.
+5. Ganti foto sekali lagi → file sebelumnya hilang dari bucket, tampilan ikut berganti.
+6. **Hapus foto** → checkout kembali menampilkan QR placeholder.
 
 ## Catatan penting supaya tampilan tetap sama persis (desktop)
 

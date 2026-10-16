@@ -114,7 +114,7 @@ export default function PengaturanView() {
         </div>
       </div>
 
-      <div className={`${s.grid} ${s.split8}`}>
+      <div className={s.grid}>
         <Card title="Foto QRIS" note="bucket: qris">
           {!ready ? (
             <Skeleton w="100%" h={340} />
@@ -184,49 +184,6 @@ export default function PengaturanView() {
                 </p>
               </div>
             </>
-          )}
-        </Card>
-
-        <Card title="Koneksi" note="dicek di server">
-          {!ready ? (
-            <Skeleton w="100%" h={200} />
-          ) : (
-            <div className={s.qrisMeta}>
-              <div className={s.qrisMetaRow}>
-                <span>Supabase</span>
-                <b>{st.configured ? "Terhubung" : "Belum dikonfigurasi"}</b>
-              </div>
-              <div className={s.qrisMetaRow}>
-                <span>Storage bucket</span>
-                <b>{st.bucketOk === false ? "Belum siap" : "qris · publik"}</b>
-              </div>
-              <div className={s.qrisMetaRow}>
-                <span>Endpoint</span>
-                <b className={s.num}>/api/qris</b>
-              </div>
-              <div className={s.qrisMetaRow}>
-                <span>Foto aktif</span>
-                <b>{st.url ? "1 file" : "0 file"}</b>
-              </div>
-
-              {!st.configured ? (
-                <p className={s.qrisNote}>
-                  Isi <b>NEXT_PUBLIC_SUPABASE_URL</b> dan <b>NEXT_PUBLIC_SUPABASE_ANON_KEY</b> di
-                  environment, jalankan <b>supabase/setup-qris.sql</b>, lalu restart server.
-                </p>
-              ) : null}
-              {st.configured && st.bucketOk === false ? (
-                <p className={s.qrisNote}>
-                  Bucket belum bisa diakses — jalankan <b>supabase/setup-qris.sql</b> di SQL Editor
-                  Supabase.
-                </p>
-              ) : null}
-
-              <p className={s.qrisNote}>
-                Hanya sesi admin yang boleh mengubah foto; kredensial Supabase tidak pernah masuk
-                browser. Untuk produksi, tambahkan Supabase Auth (lihat README).
-              </p>
-            </div>
           )}
         </Card>
       </div>
