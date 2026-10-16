@@ -72,18 +72,25 @@ export async function passwordMatches(given: string): Promise<boolean> {
 }
 
 /** Nilai cookie sesi baru; null kalau secret belum di-set. */
-export async function createSessionToken(now = Date.now()): Promise<string | null> {
+export async function createSessionToken(now?: number): Promise<string | null> {
   const secret = adminSecret();
   if (!secret) return null;
-  const payload = b64url(enc.encode(JSON.stringify({ exp: now + ADMIN_TTL_SECONDS * 1000 })));
+  /* `Date.now()` sengaja dipanggil setelah guard: nilai waktu tidak boleh
+     dievaluasi saat Next mem-prerender shell statis. */
+  const at = now ?? Date.now();
+  const payload = b64url(enc.encode(JSON.stringify({ exp: at + ADMIN_TTL_SECONDS * 1000 })));
   const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(payload)));
   return `${payload}.${b64url(sig)}`;
 }
 
 /** Validasi tanda tangan + masa berlaku token sesi. */
-export async function verifySessionToken(token: string | null | undefined, now = Date.now()): Promise<boolean> {
+export async function verifySessionToken(token?: string | null, now?: number): Promise<boolean> {
   const secret = adminSecret();
   if (!token || !secret) return false;
+
+  /* Waktu hanya dibaca setelah ada token sah — shell statis menghitung dari
+     cookie kosong, jadi `Date.now()` tidak boleh ikut tereksekusi di sana. */
+  const at = now ?? Date.now();
 
   const dot = token.indexOf(".");
   if (dot < 1) return false;
@@ -98,7 +105,7 @@ export async function verifySessionToken(token: string | null | undefined, now =
   if (!raw) return false;
   try {
     const { exp } = JSON.parse(new TextDecoder().decode(raw)) as { exp?: unknown };
-    return typeof exp === "number" && exp > now;
+    return typeof exp === "number" && exp > at;
   } catch {
     return false;
   }
