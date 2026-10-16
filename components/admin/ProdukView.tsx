@@ -556,6 +556,20 @@ function Switch({
 
 /* ----------------------------------------------------------------- panel -- */
 
+/** Satu baris tabel properti panel: label di kolom kiri, kontrol di kanan.
+    Sengaja di tingkat modul, bukan di dalam PanelProduk: komponen yang dibuat
+    di dalam render punya identitas baru tiap render, jadi React me-remount
+    seluruh isinya dan input-nya kehilangan fokus setiap kali satu huruf
+    diketik. */
+function Baris({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <tr>
+      <td>{label}</td>
+      <td>{children}</td>
+    </tr>
+  );
+}
+
 /** Detail satu produk: semua field ada di sini, satu tombol Simpan untuk semuanya. */
 function PanelProduk({
   data,
@@ -610,13 +624,6 @@ function PanelProduk({
     };
     await onSimpan(bersih);
   };
-
-  const Baris = ({ label, children }: { label: string; children: ReactNode }) => (
-    <tr>
-      <td>{label}</td>
-      <td>{children}</td>
-    </tr>
-  );
 
   return (
     <>
