@@ -83,13 +83,13 @@ nol selain elemen internal Next sendiri (wrapper 0×0 dan `<next-route-announcer
 Route `/admin` — console operasional untuk memantau performa transaksi.
 
 Halaman: `/admin` (ringkasan, KPI, grafik 7/14/30 hari), `/admin/transaksi` (ledger + filter status +
-pencarian + paginasi + detail baris), `/admin/pelanggan` (agregat per nomor tujuan), `/admin/produk`
+pencarian + paginasi + detail baris), `/admin/produk`
 (per kategori, produk, metode bayar). Setiap halaman punya ekspor CSV.
 
 **Sumber datanya.** Proyek ini belum punya backend: transaksi ditulis client-side ke
-`localStorage.vcr_tx`. Dashboard jadi menampilkan transaksi asli perangkat ini digabung dataset demo
-deterministik (seed tetap, jadi angkanya stabil), dan bagian demo dilabeli jelas di UI. Angka di
-dashboard bukan data bisnis nyata sampai ada API + database.
+`localStorage.vcr_tx`. Dashboard menampilkan **hanya orderan nyata** yang dibuat dari checkout di
+perangkat itu — tidak ada data contoh, jadi daftar dan grafik memang kosong sampai ada order
+masuk. Tanpa API + database belum ada rekap lintas perangkat.
 
 **Desainnya diambil dari NeedMCP**, bukan dikarang sendiri:
 
@@ -224,11 +224,11 @@ jangan diubah tanpa mengecek ulang tampilannya.
 ## Data transaksi
 
 Riwayat transaksi disimpan di `localStorage` dengan key `vcr_tx` (ditulis di halaman beranda,
-dibaca di halaman Cek Status dan dashboard admin). Struktur record sama seperti versi asli:
-`{ inv, prod, cat, no, name, pm, total, status, sn, time, paid }`.
+dibaca di halaman Cek Status dan dashboard admin). Struktur record:
+`{ inv, prod, cat, no, pm, total, status, sn, time, paid }`.
 
 `total` memakai satu rumus yang sama di tiga tempat — checkout beranda (`totalOf()` di
-`components/home/HomeView.tsx`), ringkasan halaman `/produk`, dan data demo admin
+`components/home/HomeView.tsx`), ringkasan halaman `/produk`, dan rekap admin
 (`components/admin/data.ts`):
 
 ```

@@ -11,7 +11,6 @@ import { stat } from "./data";
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin", label: "Ringkasan", icon: "gauge" },
   { href: "/admin/transaksi", label: "Transaksi", icon: "receipt" },
-  { href: "/admin/pelanggan", label: "Pelanggan", icon: "users" },
   { href: "/admin/produk", label: "Produk", icon: "box" },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: "settings" },
 ];

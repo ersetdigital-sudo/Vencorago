@@ -10,7 +10,6 @@ type Tx = {
   prod: string;
   cat: string;
   no: string;
-  name: string;
   pm: string;
   total: number;
   status: "pending" | "success";
@@ -131,10 +130,6 @@ export default function StatusView() {
               <div className={s.li}>
                 <span>No. Pelanggan</span>
                 <b>{found.no}</b>
-              </div>
-              <div className={s.li}>
-                <span>Nama</span>
-                <b>{found.name}</b>
               </div>
               <div className={s.li}>
                 <span>Metode</span>

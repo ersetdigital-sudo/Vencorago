@@ -1258,14 +1258,6 @@
   margin-top: 6px;
 }
 
-.demoNote {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fg-muted);
-  font-size: 11px;
-}
-
 /* ---------------------------------------------------------- responsive --- */
 
 @media (max-width: 1279px) {

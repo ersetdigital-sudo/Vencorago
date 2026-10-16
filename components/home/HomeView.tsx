@@ -120,8 +120,6 @@ function Ic({ n }: { n: IconName }) {
 const WA = "6281234567890";
 const ADMIN = 1500;
 const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
-const NAMES = ["Budi Santoso", "Siti Rahma", "Andi Pratama", "Dewi Lestari"];
-
 /* Ikon dan teks singkat khusus beranda; daftar nominalnya diturunkan dari
    katalog di components/produk/data.ts supaya pilihan cepat di sini tidak
    menyimpang dari halaman produk. Kategori paket dan tagihan tidak punya
@@ -176,12 +174,11 @@ type St = {
   h: number;
   prod: string;
   no: string;
-  name: string;
   pm: number;
   inv: string;
   sn: string;
 };
-const EMPTY: St = { cat: "", h: 0, prod: "", no: "", name: "", pm: 0, inv: "", sn: "" };
+const EMPTY: St = { cat: "", h: 0, prod: "", no: "", pm: 0, inv: "", sn: "" };
 
 type View = "empty" | "pick" | "loading" | "detail" | "pay" | "verifying" | "done";
 const STEP: Record<View, number> = {
@@ -202,7 +199,7 @@ const catOf = (n: string | null | undefined) => C.find((c) => c[1] === n);
 const margin = (v: number) => (v < 2e4 ? 1000 : 500);
 
 /* Yang dibayar pelanggan: harga produk (nominal + margin) + biaya metode + biaya
-   admin. Ini rumus yang dipakai halaman detail produk dan data demo di admin,
+   admin. Ini rumus yang dipakai halaman detail produk dan panel admin,
    jadi checkout di sini harus menghasilkan angka yang sama. */
 function totalOf(h: number, cat: string | null | undefined, pm: number) {
   /* Belum ada produk yang dipilih berarti belum ada yang dibayar. */
@@ -247,7 +244,7 @@ function seedState(k: string, h: string, p: string, no: string): Seed {
   const c = catOf(k);
   if (!c) return { st: EMPTY, view: "empty", sel: "", num: "", toast: "" };
   const hNum = +h || 0;
-  const base: St = { cat: k, h: hNum, prod: p || k, no: "", name: "", pm: 0, inv: "", sn: "" };
+  const base: St = { cat: k, h: hNum, prod: p || k, no: "", pm: 0, inv: "", sn: "" };
   if (!no) return { st: base, view: "pick", sel: k, num: "", toast: "" };
   if (c[3] && !hNum)
     return { st: base, view: "pick", sel: k, num: no, toast: "Pilih nominal dulu" };
@@ -257,7 +254,7 @@ function seedState(k: string, h: string, p: string, no: string): Seed {
   return {
     /* Kategori tagihan memakai nominal contoh dari BILL; kategori paket sudah
        membawa harga paketnya sendiri dari halaman produk. */
-    st: { ...base, h: c[3] ? hNum : (BILL[k] ?? hNum), no: noNorm, name: NAMES[noNorm.length % 4] },
+    st: { ...base, h: c[3] ? hNum : (BILL[k] ?? hNum), no: noNorm },
     view: "loading",
     sel: k,
     num: noNorm,
@@ -352,7 +349,6 @@ export default function HomeView({
         ...prev,
         h: c[3] ? prev.h : (BILL[c[1]] ?? prev.h),
         no,
-        name: NAMES[no.length % 4],
         pm: 0,
       }));
       setView("detail");
@@ -371,7 +367,6 @@ export default function HomeView({
       prod: cur.prod,
       cat: cur.cat,
       no: cur.no,
-      name: cur.name,
       pm: PM[cur.pm][1],
       total: totalOf(cur.h, cur.cat, cur.pm).total,
       status,
@@ -716,16 +711,6 @@ export default function HomeView({
 
               {view == "detail" && (
                 <>
-                  <div className={s.cust}>
-                    <span className={s.pi}>
-                      <Ic n="user" />
-                    </span>
-                    <div>
-                      <small style={{ color: "var(--mut)" }}>Nama pelanggan</small>
-                      <br />
-                      <b>{st.name}</b>
-                    </div>
-                  </div>
                   <div className={s.li}>
                     <span>Produk</span>
                     <b>{st.prod}</b>
@@ -744,9 +729,6 @@ export default function HomeView({
                     <span>{BILL[st.cat] ? "Tagihan (contoh)" : "Harga"}</span>
                     <b>{rp(st.h + price.margin)}</b>
                   </div>
-                  <small style={{ display: "block", fontSize: 11, color: "var(--mut)", marginTop: 2 }}>
-                    Nama pelanggan di atas masih data contoh; pengecekan ke penyedia belum terhubung.
-                  </small>
                   <div className={s.li}>
                     <span>Biaya admin</span>
                     <b>{rp(pmFee)}</b>
@@ -892,8 +874,8 @@ export default function HomeView({
                     </div>
                   ) : null}
                   <div className={s.li}>
-                    <span>Pelanggan</span>
-                    <b>{st.name}</b>
+                    <span>No. Tujuan</span>
+                    <b>{st.no}</b>
                   </div>
                   <div className={s.li}>
                     <span>Metode</span>

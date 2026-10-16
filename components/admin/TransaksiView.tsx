@@ -48,7 +48,7 @@ export default function TransaksiView({
     return tx.filter((t) => {
       if (cutoff && t.time < cutoff) return false;
       if (status !== "all" && stat(t) !== status) return false;
-      if (qq && !`${t.inv} ${t.prod} ${t.no} ${t.name} ${t.pm}`.toLowerCase().includes(qq)) return false;
+      if (qq && !`${t.inv} ${t.prod} ${t.no} ${t.pm}`.toLowerCase().includes(qq)) return false;
       return true;
     });
   }, [tx, q, status, period]);
@@ -60,13 +60,12 @@ export default function TransaksiView({
 
   const exportCsv = () => {
     const csv = toCsv(
-      ["invoice", "waktu", "produk", "kategori", "pelanggan", "nomor", "metode", "status", "total", "serial"],
+      ["invoice", "waktu", "produk", "kategori", "nomor_tujuan", "metode", "status", "total", "serial"],
       rows.map((t) => [
         t.inv,
         new Date(t.time).toISOString(),
         t.prod,
         t.cat,
-        t.name,
         t.no,
         t.pm,
         stat(t),
@@ -153,7 +152,7 @@ export default function TransaksiView({
         {loading ? (
           <TableSkeleton rows={8} cols={6} />
         ) : slice.length === 0 ? (
-          <Empty title="Tidak ada transaksi yang cocok">
+          <Empty title={filtered ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi"}>
             {filtered
               ? "Coba ubah kata kunci, status, atau rentang harinya."
               : "Transaksi baru akan muncul di sini setelah dibuat dari situs."}
@@ -184,7 +183,7 @@ export default function TransaksiView({
                     <th>Invoice</th>
                     <th>Waktu</th>
                     <th>Produk</th>
-                    <th>Pelanggan</th>
+                    <th>Nomor tujuan</th>
                     <th>Metode</th>
                     <th className={s.cellRight}>Total</th>
                     <th>Status</th>
@@ -205,13 +204,7 @@ export default function TransaksiView({
                           <td className={`${s.cellStrong} ${s.num}`}>{t.inv}</td>
                           <td className={s.num}>{dt(t.time)}</td>
                           <td>{t.prod}</td>
-                          <td>
-                            {t.name}
-                            <br />
-                            <span className={s.num} style={{ color: "var(--fg-muted)", fontSize: 11 }}>
-                              {t.no}
-                            </span>
-                          </td>
+                          <td className={s.num}>{t.no}</td>
                           <td>{t.pm}</td>
                           <td className={`${s.cellRight} ${s.num} ${s.cellStrong}`}>{rp(t.total)}</td>
                           <td>

@@ -11,7 +11,7 @@ import { useTx } from "./useTx";
 const PERIODS = [7, 14, 30];
 
 export default function OverviewView() {
-  const { tx, loading, demoCount, localCount } = useTx();
+  const { tx, loading } = useTx();
   const [days, setDays] = useState(7);
 
   const sum = useMemo(() => summarize(tx), [tx]);
@@ -38,9 +38,7 @@ export default function OverviewView() {
         <div>
           <h1 className={s.pageTitle}>Ringkasan</h1>
           <p className={s.pageSub}>
-            {loading
-              ? "Menyiapkan data…"
-              : `${sum.count} transaksi · ${demoCount} demo + ${localCount} dari perangkat ini`}
+            {loading ? "Menyiapkan data…" : `${sum.count} transaksi dari perangkat ini`}
           </p>
         </div>
         <div className={s.pageAction}>
@@ -257,13 +255,6 @@ export default function OverviewView() {
         </div>
       </div>
 
-      {!loading && demoCount > 0 ? (
-        <p className={s.demoNote}>
-          <Badge tone="accent">Demo</Badge>
-          Belum ada backend: {demoCount} transaksi contoh (deterministik) digabung dengan {localCount} transaksi
-          nyata dari localStorage perangkat ini.
-        </p>
-      ) : null}
     </>
   );
 }
