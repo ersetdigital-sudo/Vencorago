@@ -233,8 +233,7 @@ export default function ProdukView() {
           </div>
 
           <select
-            className={s.field}
-            style={{ width: 220, height: 40 }}
+            className={`${s.field} ${s.toolbarSelect}`}
             value={slug}
             aria-label="Filter kategori"
             onChange={(e) => setSlug(e.target.value)}
