@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import s from "./produk.module.css";
-import { CATS, K, rp } from "./data";
+import { CATS, K, checkNumber, normalizeNumber, rp } from "./data";
 
 const SV = {
   phone: (
@@ -72,49 +72,169 @@ function Ic({ n }: { n: IconName }) {
   );
 }
 
+const ADMIN = 1500;
+
 const FAQS: [string, string][] = [
   ["Berapa lama prosesnya?", "Rata-rata 5 detik sampai 3 menit setelah pembayaran terverifikasi."],
   ["Bagaimana kalau transaksi gagal?", "Dana dikembalikan 100% ke saldo atau rekening kamu maksimal 1x24 jam."],
-  ["Apakah ada biaya tambahan?", "Hanya biaya admin Rp 1.500. Virtual Account dikenakan tambahan Rp 2.500."],
+  [
+    "Apakah ada biaya tambahan?",
+    "Harga di atas sudah termasuk margin produk. Biaya admin Rp 1.500, dan Virtual Account dikenakan tambahan Rp 2.500.",
+  ],
   ["Bisa cek transaksi sebelumnya?", "Bisa, buka halaman Cek Status dan masukkan nomor invoice kamu."],
 ];
 
-export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
+export default function ProdukView({
+  k = "Pulsa",
+  op: opParam = "",
+  h = "",
+}: {
+  k?: string;
+  op?: string;
+  h?: string;
+}) {
   const cat = k;
   const c = K[cat];
-  const [op, setOp] = useState(Object.keys(c.ops)[0]);
-  const [selIdx, setSelIdx] = useState<number | null>(null);
+  const firstOp = opParam && c.ops[opParam] ? opParam : Object.keys(c.ops)[0];
+  const [op, setOp] = useState(firstOp);
+  // Nominal yang dikirim beranda langsung terpilih di grid item.
+  const [selIdx, setSelIdx] = useState<number | null>(() => {
+    const v = +h || 0;
+    if (!v) return null;
+    const i = c.ops[firstOp].findIndex((x) => x.v === v);
+    return i < 0 ? null : i;
+  });
   const [num, setNum] = useState("");
+  const [err, setErr] = useState("");
 
   const items = c.ops[op];
-  const sel: { n: string; p: number; i: number; v?: number } | null = c.bill
-    ? { n: op, p: 0, i: -1 }
-    : selIdx != null
-      ? { ...items[selIdx], i: selIdx }
-      : null;
+  const isBill = c.kind == "tagihan";
+  const showOps = Object.keys(c.ops).length > 1 || isBill;
+  /* Kalau baris penyedia tidak dirender (kategori berpenyedia tunggal seperti Token
+     PLN), judul section memakai label pilihan berikutnya supaya tidak menggantung. */
+  const sectionTitle = showOps ? c.opLabel : c.nomLabel;
+  /* Sub-judul hanya muncul kalau judul section sudah dipakai baris penyedia —
+     tidak ada dua label berbeda untuk fungsi yang sama. */
+  const showNomLabel = showOps && c.nomLabel;
 
-  const sp = sel ? (c.bill ? op : op + " " + sel.n) : "-";
-  const sh = sel ? (sel.p ? rp(sel.p) : "Dicek otomatis") : "-";
-  const stt = sel && sel.p ? rp(sel.p + 1500) : c.bill && sel ? "Dicek otomatis" : "Rp 0";
+  const sel = isBill ? { n: op, p: 0, v: 0, d: "" } : selIdx != null ? items[selIdx] : null;
+
+  const harga = !sel ? "Belum dipilih" : isBill || !sel.p ? "Dicek otomatis" : rp(sel.p);
+  const total = isBill || !sel || !sel.p ? (isBill ? "Dicek otomatis" : "Rp 0") : rp(sel.p + ADMIN);
+
+  /* Belum ada produk dipilih: ringkasan menampilkan petunjuk, bukan angka Rp 0
+     yang ditonjolkan. Perhitungannya sendiri tidak berubah. */
+  const belumPilih = !isBill && !sel;
+
+  /* Ringkasan ikut berubah begitu penyedia/nominal berganti karena semuanya
+     diturunkan dari `sel` — tidak ada nilai yang disimpan terpisah. */
+  const summary = (
+    <>
+      <div className={s.sumGroup}>
+        <div className={s.li}>
+          <span>Produk</span>
+          <b>{cat}</b>
+        </div>
+        <div className={s.li}>
+          <span>Penyedia</span>
+          <b>{op}</b>
+        </div>
+        {isBill ? (
+          <div className={s.li}>
+            <span>Tagihan</span>
+            <b>Dicek otomatis</b>
+          </div>
+        ) : (
+          <>
+            <div className={s.li}>
+              <span>{c.kind == "paket" ? "Paket" : "Nominal"}</span>
+              <b className={belumPilih ? s.liEmpty : undefined}>{sel ? sel.n : "Belum dipilih"}</b>
+            </div>
+            {c.kind == "paket" && sel ? (
+              <div className={s.li}>
+                <span>Masa aktif</span>
+                <b>{sel.d}</b>
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+      <div className={s.sumGroup}>
+        <div className={s.li}>
+          <span>Harga</span>
+          <b className={belumPilih ? s.liEmpty : undefined}>{belumPilih ? "—" : harga}</b>
+        </div>
+        <div className={s.li}>
+          <span>Biaya admin</span>
+          <b>{rp(ADMIN)}</b>
+        </div>
+      </div>
+      <div className={`${s.tot} ${belumPilih ? s.totEmpty : ""}`}>
+        <span>Total</span>
+        <b>{belumPilih ? "—" : total}</b>
+      </div>
+      {belumPilih ? (
+        <p className={s.sumHint}>
+          Pilih {c.kind == "paket" ? "paket data" : "nominal"} di atas untuk melihat total pembayaran.
+        </p>
+      ) : null}
+    </>
+  );
+
+  function pickItem(i: number) {
+    setSelIdx(i);
+    setErr("");
+  }
 
   function go() {
-    if (!sel) return alert("Pilih produk dulu ya");
-    const n = num.replace(/\D/g, "");
-    if (n.length < 8) return alert(c.nl + " minimal 8 digit");
-    location.href = `/?k=${encodeURIComponent(cat)}&h=${sel.v || 0}&p=${encodeURIComponent(
-      c.bill ? op : op + " " + sel.n
+    if (!sel) return setErr(c.kind == "paket" ? "Pilih paket data dulu" : "Pilih nominal dulu");
+    const bad = checkNumber(cat, num);
+    if (bad) return setErr(bad);
+    setErr("");
+    const n = normalizeNumber(num);
+    /* Paket sudah punya harga jual sendiri, sedangkan pulsa/token/e-wallet
+       dikirim sebagai nominal supaya checkout menghitung marginnya. */
+    const hargaKirim = c.kind == "paket" ? sel.p : sel.v;
+    location.href = `/?k=${encodeURIComponent(cat)}&h=${hargaKirim}&p=${encodeURIComponent(
+      isBill ? op : op + " " + sel.n
     )}&no=${n}`;
   }
 
-  const how = [
-    `Pilih ${c.bill ? "penyedia" : "operator dan nominal"}`,
-    `Masukkan ${c.nl.toLowerCase()}`,
-    "Klik Lanjut Bayar lalu cek detail pesanan",
-    "Pilih metode bayar: QRIS, Virtual Account, atau DANA",
-    cat == "Token PLN"
-      ? "Token listrik langsung muncul setelah pembayaran"
-      : "Transaksi diproses otomatis, cek status kapan saja",
-  ];
+  const how = isBill
+    ? [
+        `Pilih ${c.opLabel.replace("Pilih ", "").toLowerCase()}`,
+        `Masukkan ${c.nl.toLowerCase()}`,
+        "Klik Lanjut Bayar lalu cek detail tagihan",
+        "Pilih metode bayar: QRIS, Virtual Account, atau DANA",
+        "Nominal tagihan muncul setelah data pelanggan ditemukan",
+      ]
+    : [
+        showOps ? "Pilih operator dan nominal" : "Pilih nominal",
+        `Masukkan ${c.nl.toLowerCase()}`,
+        "Klik Lanjut Bayar lalu cek detail pesanan",
+        "Pilih metode bayar: QRIS, Virtual Account, atau DANA",
+        cat == "Token PLN"
+          ? "Token listrik langsung muncul setelah pembayaran"
+          : "Transaksi diproses otomatis, cek status kapan saja",
+      ];
+
+  const numInput = (
+    <input
+      id="nomor"
+      inputMode="numeric"
+      enterKeyHint="go"
+      placeholder={c.ph}
+      aria-invalid={Boolean(err)}
+      value={num}
+      onChange={(e) => {
+        setNum(e.target.value);
+        if (err) setErr("");
+      }}
+      onKeyDown={(e) => {
+        if (e.key == "Enter") go();
+      }}
+    />
+  );
 
   return (
     <div className={s.pg}>
@@ -156,28 +276,34 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
             <p>{c.d}</p>
           </div>
         </section>
+
         <div className={s.grid}>
           <div>
             <div className={`${s.card} ${s.mobileTop}`}>
-              <h2>Nomor Tujuan</h2>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  go();
+              <h2>{isBill ? "Data Pelanggan" : "Nomor Tujuan"}</h2>
+              <label htmlFor="nomor-mobile" className={s.lbl}>
+                {c.nl}
+              </label>
+              <input
+                id="nomor-mobile"
+                inputMode="numeric"
+                enterKeyHint="go"
+                placeholder={c.ph}
+                aria-invalid={Boolean(err)}
+                value={num}
+                onChange={(e) => {
+                  setNum(e.target.value);
+                  if (err) setErr("");
                 }}
-              >
-                <label htmlFor="nomor" style={{ fontSize: 13, fontWeight: 600 }}>
-                  {c.nl}
-                </label>
-                <input
-                  id="nomor"
-                  inputMode="numeric"
-                  enterKeyHint="go"
-                  placeholder={c.ph}
-                  value={num}
-                  onChange={(e) => setNum(e.target.value)}
-                />
-              </form>
+                onKeyDown={(e) => {
+                  if (e.key == "Enter") go();
+                }}
+              />
+              {err ? (
+                <p className={s.err} role="alert">
+                  {err}
+                </p>
+              ) : null}
               <div className={s.feat}>
                 <span>
                   <Ic n="clock" /> Proses otomatis 24 jam
@@ -190,77 +316,113 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
                 </span>
               </div>
             </div>
+
             <div className={s.card}>
-              <h2>{c.bill ? "Pilih penyedia" : "Pilih operator & nominal"}</h2>
-              {(Object.keys(c.ops).length > 1 || c.bill) && (
-                <div className={s.ops}>
+              <h2>{sectionTitle}</h2>
+              {showOps ? (
+                <div className={s.ops} role="group" aria-label={c.opLabel}>
                   {Object.keys(c.ops).map((o) => (
                     <div
                       key={o}
                       className={`${s.op} ${o == op ? s.on : ""}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={o == op}
                       onClick={() => {
                         setOp(o);
                         setSelIdx(null);
+                        setErr("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key == "Enter" || e.key == " ") {
+                          e.preventDefault();
+                          setOp(o);
+                          setSelIdx(null);
+                          setErr("");
+                        }
                       }}
                     >
+                      {/* Tidak ada aset logo resmi di proyek ini, jadi semua
+                          penyedia memakai monogram seragam dari namanya. */}
+                      <span className={s.opMark} aria-hidden="true">
+                        {o.charAt(0)}
+                      </span>
                       {o}
                     </div>
                   ))}
                 </div>
-              )}
-              <div>
-                {c.bill ? (
-                  <>
-                    <p style={{ fontSize: 13, color: "var(--mut)", margin: "14px 0" }}>
-                      Tagihan dicek otomatis berdasarkan nomor pelanggan.
-                    </p>
-                    <div className={s.bill}>
-                      {Object.entries(c.bill).map(([a, b]) => (
-                        <div key={a}>
-                          {a}
-                          <b>{b}</b>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className={s.items} style={{ marginTop: 14 }}>
-                    {items.map((x, i) => (
-                      <div
-                        key={i}
-                        className={`${s.it} ${sel && sel.i == i ? s.on : ""}`}
-                        onClick={() => setSelIdx(i)}
-                      >
-                        {i == 1 ? <span className={s.hot}>TERLARIS</span> : null}
-                        <b>{x.n}</b>
-                        <small>{x.d}</small>
-                        <span className={s.pr}>{rp(x.p)}</span>
-                        {x.p > x.v ? <s>{rp(x.p + 1500)}</s> : null}
+              ) : null}
+
+              {isBill ? (
+                <div className={s.billWrap}>
+                  <p className={s.note}>
+                    Nominal tagihan dicek otomatis berdasarkan {c.nl}. Angka di bawah hanya
+                    gambaran; tagihan asli muncul setelah data pelanggan ditemukan.
+                  </p>
+                  <div className={s.bill}>
+                    {Object.entries(c.bill ?? {}).map(([a, b]) => (
+                      <div key={a}>
+                        {a}
+                        <b>{b}</b>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  {showNomLabel ? <div className={s.lbl}>{c.nomLabel}</div> : null}
+                  {items.length == 0 ? (
+                    <p className={s.emptyItems}>
+                      Belum ada {c.kind == "paket" ? "paket" : "nominal"} untuk {op}.
+                    </p>
+                  ) : (
+                    <div className={s.items}>
+                      {items.map((x, i) => (
+                        <div
+                          key={i}
+                          className={`${s.it} ${selIdx == i ? s.on : ""} ${c.kind == "paket" ? s.pk : ""}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={selIdx == i}
+                          onClick={() => pickItem(i)}
+                          onKeyDown={(e) => {
+                            if (e.key == "Enter" || e.key == " ") {
+                              e.preventDefault();
+                              pickItem(i);
+                            }
+                          }}
+                        >
+                          {c.kind == "paket" ? (
+                            <>
+                              <b className={s.quota}>{x.n}</b>
+                              <span className={s.pkChips}>
+                                {x.d.split(",").map((part) => (
+                                  <span key={part}>{part.trim()}</span>
+                                ))}
+                              </span>
+                              <span className={s.pkgRow}>
+                                <span className={s.pr}>{rp(x.p)}</span>
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <b>{x.n}</b>
+                              <span className={s.pr}>{rp(x.p)}</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
+
             <div className={`${s.card} ${s.mobileSum}`}>
               <h2>Ringkasan</h2>
-              <div className={s.li}>
-                <span>Produk</span>
-                <b>{sp}</b>
-              </div>
-              <div className={s.li}>
-                <span>Harga</span>
-                <b>{sh}</b>
-              </div>
-              <div className={s.li}>
-                <span>Biaya admin</span>
-                <b>Rp 1.500</b>
-              </div>
-              <div className={s.tot}>
-                <span>Total</span>
-                <b>{stt}</b>
-              </div>
+              {summary}
             </div>
+
             <div className={s.card}>
               <h2>Cara pembelian</h2>
               <ol>
@@ -281,32 +443,20 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
               </div>
             </div>
           </div>
+
           <aside>
             <div className={s.card}>
               <h2>Ringkasan</h2>
-              <label style={{ fontSize: 13, fontWeight: 600 }}>{c.nl}</label>
-              <input
-                inputMode="numeric"
-                placeholder={c.ph}
-                value={num}
-                onChange={(e) => setNum(e.target.value)}
-              />
-              <div className={s.li}>
-                <span>Produk</span>
-                <b>{sp}</b>
-              </div>
-              <div className={s.li}>
-                <span>Harga</span>
-                <b>{sh}</b>
-              </div>
-              <div className={s.li}>
-                <span>Biaya admin</span>
-                <b>Rp 1.500</b>
-              </div>
-              <div className={s.tot}>
-                <span>Total</span>
-                <b>{stt}</b>
-              </div>
+              <label htmlFor="nomor" className={s.lbl}>
+                {c.nl}
+              </label>
+              {numInput}
+              {err ? (
+                <p className={s.err} role="alert">
+                  {err}
+                </p>
+              ) : null}
+              {summary}
               <button className={`${s.btn} ${s.full}`} onClick={go}>
                 Lanjut Bayar →
               </button>
@@ -335,7 +485,7 @@ export default function ProdukView({ k = "Pulsa" }: { k?: string }) {
       <div className={s.bar}>
         <div className={s.barInfo}>
           <small>Total</small>
-          <b>{stt}</b>
+          <b>{belumPilih ? "—" : total}</b>
         </div>
         <button className={s.btn} onClick={go}>
           Lanjut Bayar →

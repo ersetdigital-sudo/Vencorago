@@ -85,29 +85,35 @@
 }
 .pg .hero {
   display: flex;
-  gap: 20px;
+  gap: 18px;
   align-items: center;
-  padding: 20px 0 26px;
+  padding: 22px 0 30px;
 }
 .pg .big {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  background: #eaf3f1;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: #e8f2f0;
+  border: 1px solid #d5e7e3;
   color: var(--teal);
   display: grid;
   place-items: center;
-  font-size: 34px;
+  font-size: 28px;
   flex: none;
 }
 .pg h1 {
   font-family: "DM Serif Display";
-  font-size: 42px;
+  font-size: 38px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   color: var(--teal);
 }
 .pg .hero p {
   color: var(--mut);
-  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 6px;
+  max-width: 48ch;
 }
 .pg .grid {
   display: grid;
@@ -126,22 +132,33 @@
   margin-bottom: 18px;
 }
 .pg h2 {
-  font-size: 16px;
-  margin-bottom: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 12px;
 }
 .pg .ops {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: 16px;
 }
 .pg .op {
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 8px;
   border-radius: 10px;
   border: 1px solid var(--line);
   font-size: 13px;
   cursor: pointer;
   background: #fff;
+  color: var(--ink);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.pg .op:hover {
+  border-color: #9dbfba;
 }
 .pg .op.on {
   border-color: var(--teal);
@@ -149,57 +166,135 @@
   color: var(--teal);
   font-weight: 600;
 }
+/* Fallback seragam karena proyek ini tidak punya aset logo provider. */
+.pg .opMark {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: #f1efe8;
+  color: #4a625f;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pg .op.on .opMark {
+  background: var(--teal);
+  color: #fff;
+}
 .pg .items {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 .pg .it {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 86px;
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 16px;
+  background: #fff;
   cursor: pointer;
-  transition: 0.2s;
   position: relative;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease,
+    transform 150ms ease;
 }
 .pg .it:hover {
-  border-color: var(--teal);
+  border-color: #9dbfba;
+  box-shadow: 0 6px 18px rgba(15, 95, 92, 0.07);
+  transform: translateY(-1px);
 }
 .pg .it.on {
   border-color: var(--teal);
   background: #eaf3f1;
-  box-shadow: 0 8px 20px #0f5f5c1a;
+  box-shadow: 0 8px 20px rgba(15, 95, 92, 0.1);
 }
+/* Indikator pilihan sederhana — tanpa tambahan ikon/badge di markup. */
+.pg .it.on::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 6px;
+  height: 11px;
+  border-right: 2px solid var(--teal);
+  border-bottom: 2px solid var(--teal);
+  transform: rotate(40deg);
+}
+/* Nominal sebagai informasi utama, harga jual sebagai pendamping. */
 .pg .it b {
   display: block;
-  font-size: 15px;
-}
-.pg .it small {
-  color: var(--mut);
-  font-size: 12px;
-  display: block;
-  margin: 4px 0 10px;
-  min-height: 30px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  padding-right: 18px;
+  font-variant-numeric: tabular-nums;
 }
 .pg .it .pr {
+  display: block;
   color: var(--teal);
   font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
-.pg .it s {
-  color: #aaa;
+/* Kartu paket lebih deskriptif daripada kartu nominal: nama paket sebagai judul,
+   benefit/masa aktif sebagai chip, harga di bawah. */
+.pg .pk {
+  display: flex;
+  flex-direction: column;
+}
+.pg .pkChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+.pg .pkChips span {
+  background: #f4f1ea;
+  border-radius: 999px;
+  padding: 3px 9px;
   font-size: 11px;
-  margin-left: 4px;
+  color: #33504c;
 }
-.pg .hot {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #fbeee4;
-  color: #b4693c;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
+.pg .pkgRow {
+  display: block;
+  margin-top: auto;
+  padding-top: 4px;
+}
+.pg .lbl {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+  margin: 4px 0 8px;
+}
+.pg .err {
+  color: #b3261e;
+  font-size: 12px;
+  margin: -4px 0 12px;
+}
+.pg .note {
+  font-size: 13px;
+  color: var(--mut);
+  line-height: 1.6;
+  margin: 14px 0;
+}
+.pg .billWrap {
+  margin-top: 14px;
+}
+.pg .emptyItems {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--mut);
+  text-align: center;
 }
 .pg .bill {
   display: grid;
@@ -255,22 +350,69 @@
 .pg .li {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
   font-size: 13px;
   padding: 6px 0;
 }
 .pg .li span {
   color: var(--mut);
+  flex: none;
+}
+.pg .li b {
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pg .liEmpty {
+  color: var(--mut);
+  font-weight: 500;
+}
+/* Separator halus antar blok informasi di ringkasan. */
+.pg .sumGroup + .sumGroup {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
 }
 .pg .tot {
   border-top: 1px solid var(--line);
-  margin-top: 8px;
-  padding-top: 12px;
+  margin-top: 12px;
+  padding-top: 14px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  gap: 12px;
+}
+.pg .tot span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
 }
 .pg .tot b {
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--teal);
+  font-variant-numeric: tabular-nums;
+}
+.pg .totEmpty b {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--mut);
+}
+.pg .sumHint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+/* Fokus keyboard untuk chip provider, kartu nominal, dan tombol. */
+.pg .op:focus-visible,
+.pg .it:focus-visible,
+.pg .btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
 }
 .pg .full {
   width: 100%;
@@ -316,16 +458,6 @@
   }
   .pg .bill {
     grid-template-columns: 1fr;
-  }
-  .pg .it s {
-    display: none;
-  }
-  .pg .it {
-    padding-top: 26px;
-  }
-  .pg .hot {
-    top: 6px;
-    right: 6px;
   }
 }
 .pg ol {
@@ -425,13 +557,18 @@
     display: flex;
     align-items: center;
     min-height: 44px;
-    padding: 10px 15px;
+    padding: 9px 15px 9px 9px;
+  }
+  /* Target klik minimal 44px juga untuk tombol header di mobile. */
+  .pg .btn {
+    min-height: 44px;
   }
   .pg .items {
     gap: 10px;
   }
   .pg .it {
-    padding: 26px 14px 14px;
+    min-height: 78px;
+    padding: 14px;
   }
   .pg .grid {
     padding-bottom: 36px;
@@ -475,5 +612,44 @@
   .pg .bar .btn {
     min-height: 46px;
     padding: 12px 22px;
+  }
+}
+
+/* Di layar sempit dua kolom membuat nominal panjang terpotong dua baris,
+   sehingga tinggi kartu jadi tidak seragam antar baris. Satu kolom lebih rapi. */
+/* Nominal panjang (Rp 1.000.000) harus tetap satu baris supaya tinggi kartu
+   seragam dan tidak ada kartu yang lebih tinggi dari yang lain. */
+@media (max-width: 480px) {
+  .pg .it {
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+  .pg .it b {
+    font-size: 15px;
+    padding-right: 12px;
+  }
+  .pg .it .pr {
+    font-size: 13px;
+  }
+}
+
+/* Di layar sempit, dua kolom memaksa nominal panjang (Rp 1.000.000) turun ke
+   baris kedua di sebagian kartu saja, sehingga tinggi kartu antar baris jadi
+   tidak seragam. Satu kolom menjaga semuanya satu baris dan rata. */
+@media (max-width: 420px) {
+  .pg .items {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg .op,
+  .pg .opMark,
+  .pg .it {
+    transition: none;
+  }
+  .pg .it:hover {
+    transform: none;
+    box-shadow: none;
   }
 }

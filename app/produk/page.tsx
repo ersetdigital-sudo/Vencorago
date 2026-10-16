@@ -6,17 +6,19 @@ export const instant = false;
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : (v ?? ""));
 
-async function kategori(props: PageProps<"/produk">) {
+/* `op` dan `h` datang dari kartu produk di beranda, supaya halaman detail
+   benar-benar terbuka pada operator + nominal yang tadi dipilih. */
+async function params(props: PageProps<"/produk">) {
   const sp = await props.searchParams;
   const k = one(sp.k);
-  return k && K[k] ? k : DEFAULT_CAT;
+  return { cat: k && K[k] ? k : DEFAULT_CAT, op: one(sp.op), h: one(sp.h) };
 }
 
 export async function generateMetadata(props: PageProps<"/produk">): Promise<Metadata> {
-  return { title: (await kategori(props)) + " — VENCORAGO" };
+  return { title: (await params(props)).cat + " — VENCORAGO" };
 }
 
 export default async function Page(props: PageProps<"/produk">) {
-  const cat = await kategori(props);
-  return <ProdukView key={cat} k={cat} />;
+  const { cat, op, h } = await params(props);
+  return <ProdukView key={`${cat}|${op}|${h}`} k={cat} op={op} h={h} />;
 }
