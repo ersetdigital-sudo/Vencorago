@@ -9,10 +9,11 @@
 --
 -- Catatan keamanan: kebijakan ini sengaja mengizinkan role `anon` menulis di
 -- bucket qris, karena unggah/hapus dikerjakan route server Next.js (/api/qris)
--- dengan key publishable dan dikunci PIN admin. Artinya proteksi PIN hanya
--- berlaku di aplikasi: siapa pun yang memegang key publishable masih bisa
--- menulis langsung ke Storage. Untuk produksi, tambahkan Supabase Auth dan
--- batasi policy ke `to authenticated` — lihat README bagian Supabase.
+-- memakai key publishable, dan route itu hanya menerima sesi admin yang sah
+-- (cookie dari /api/admin/login). Artinya proteksi login hanya berlaku di
+-- aplikasi: siapa pun yang memegang key publishable masih bisa menulis
+-- langsung ke Storage. Untuk produksi, pindahkan upload ke Supabase Auth dan
+-- ubah policy jadi `to authenticated` — lihat README bagian Supabase.
 -- ===========================================================================
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

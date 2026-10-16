@@ -690,6 +690,78 @@
   font-size: 13px;
 }
 
+/* ---------------------------------------------------------- login admin --- */
+
+.loginPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--sp-lg);
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  box-shadow: var(--elev2);
+}
+
+.loginMark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--glow);
+}
+
+.loginMark svg {
+  width: 34px;
+  height: 34px;
+}
+
+.loginTitle {
+  margin: var(--sp-md) 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.loginNote {
+  margin: 6px 0 var(--sp-lg);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.loginSubmit {
+  margin-top: var(--sp-lg);
+}
+
+.loginBack {
+  margin-top: var(--sp-md);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.loginBack:hover {
+  color: var(--primary);
+}
+
 /* -------------------------------------------------- pengaturan (foto qris) --- */
 
 .qrisPreview {

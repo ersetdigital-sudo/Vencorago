@@ -9,9 +9,8 @@ import { fetchQris, type QrisState } from "@/lib/qris";
    langkah setup yang belum dijalankan (env / SQL bucket). */
 const ERR: Record<string, string> = {
   "not-configured":
-    "Supabase belum terhubung — isi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY di .env.local lalu restart server.",
-  "no-pin": "ADMIN_PIN belum di-set di .env.local. Tentukan PIN dulu sebelum bisa ganti foto.",
-  "bad-pin": "PIN salah.",
+    "Supabase belum terhubung — isi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY di environment lalu restart server.",
+  unauthorized: "Sesi admin sudah berakhir. Muat ulang halaman untuk masuk lagi.",
   "no-file": "Pilih file gambar dulu.",
   "empty": "File-nya kosong.",
   "too-big": "Ukuran file maksimal 5 MB.",
@@ -30,7 +29,6 @@ type Msg = { ok: boolean; text: string };
 
 export default function PengaturanView() {
   const [st, setSt] = useState<QrisState | null>(null);
-  const [pin, setPin] = useState("");
   const [fileName, setFileName] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg | null>(null);
@@ -50,11 +48,7 @@ export default function PengaturanView() {
     setBusy(true);
     setMsg(null);
     try {
-      const r = await fetch("/api/qris", {
-        method,
-        headers: { "x-admin-pin": pin },
-        body: fd,
-      });
+      const r = await fetch("/api/qris", { method, body: fd });
       const j = (await r.json().catch(() => ({}))) as {
         ok?: boolean;
         url?: string | null;
@@ -78,6 +72,8 @@ export default function PengaturanView() {
       if (j.code === "not-configured") setSt({ configured: false, url: null });
       if (j.code === "no-bucket")
         setSt((p) => ({ configured: true, url: p?.url ?? null, bucketOk: false }));
+      if (j.code === "unauthorized")
+        setSt((p) => ({ configured: p?.configured ?? true, url: p?.url ?? null, bucketOk: p?.bucketOk }));
       setMsg({ ok: false, text: ERR[j.code ?? ""] ?? `Permintaan gagal (HTTP ${r.status}).` });
     } catch {
       setMsg({ ok: false, text: "Jaringan bermasalah — coba lagi." });
@@ -101,7 +97,6 @@ export default function PengaturanView() {
   }
 
   const ready = st !== null;
-  const canWrite = !busy && Boolean(pin.trim());
 
   return (
     <>
@@ -144,22 +139,6 @@ export default function PengaturanView() {
               </div>
 
               <div className={s.qrisForm}>
-                <label className={s.qrisLabel} htmlFor="qris-pin">
-                  PIN admin
-                </label>
-                <input
-                  id="qris-pin"
-                  className={`${s.field} ${s.qrisPin}`}
-                  type="password"
-                  autoComplete="off"
-                  placeholder="PIN dari .env.local (ADMIN_PIN)"
-                  value={pin}
-                  onChange={(e) => {
-                    setPin(e.target.value);
-                    if (msg) setMsg(null);
-                  }}
-                />
-
                 <div className={s.qrisActions}>
                   <label className={`${s.btn} ${s.qrisPick}`} htmlFor="qris-file">
                     <Icon n="upload" />
@@ -180,12 +159,12 @@ export default function PengaturanView() {
                   <button
                     className={`${s.btn} ${s.btnPrimary}`}
                     onClick={upload}
-                    disabled={!canWrite || !fileName}
+                    disabled={busy || !fileName}
                   >
                     <Icon n="upload" />
                     Unggah &amp; ganti
                   </button>
-                  <button className={s.btn} onClick={remove} disabled={!canWrite || !st.url}>
+                  <button className={s.btn} onClick={remove} disabled={busy || !st.url}>
                     <Icon n="trash" />
                     Hapus foto
                   </button>
@@ -232,8 +211,8 @@ export default function PengaturanView() {
 
               {!st.configured ? (
                 <p className={s.qrisNote}>
-                  Isi <b>NEXT_PUBLIC_SUPABASE_URL</b> dan <b>NEXT_PUBLIC_SUPABASE_ANON_KEY</b> di{" "}
-                  <b>.env.local</b>, jalankan <b>supabase/setup-qris.sql</b>, lalu restart server.
+                  Isi <b>NEXT_PUBLIC_SUPABASE_URL</b> dan <b>NEXT_PUBLIC_SUPABASE_ANON_KEY</b> di
+                  environment, jalankan <b>supabase/setup-qris.sql</b>, lalu restart server.
                 </p>
               ) : null}
               {st.configured && st.bucketOk === false ? (
@@ -244,8 +223,8 @@ export default function PengaturanView() {
               ) : null}
 
               <p className={s.qrisNote}>
-                Upload dikunci PIN di server; kredensial Supabase tidak pernah masuk browser. Untuk
-                produksi, tambahkan Supabase Auth (lihat README).
+                Hanya sesi admin yang boleh mengubah foto; kredensial Supabase tidak pernah masuk
+                browser. Untuk produksi, tambahkan Supabase Auth (lihat README).
               </p>
             </div>
           )}

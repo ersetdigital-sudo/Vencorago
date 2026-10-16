@@ -107,6 +107,13 @@ const SV = {
       <path d="M4 20h16" />
     </>
   ),
+  logout: (
+    <>
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <path d="M10 8 6 12l4 4" />
+      <path d="M6 12h9" />
+    </>
+  ),
   trash: (
     <>
       <path d="M4 7h16" />

@@ -108,8 +108,31 @@ dashboard bukan data bisnis nyata sampai ada API + database.
   reinvent affordance standar (text selection + focus ring tetap diwarnai dari palet).
 - State NeedMCP disimpan di `.needmcp/state.json` supaya sesi berikutnya memakai DNA/style yang sama.
 
-**Belum ada auth.** `/admin` masih terbuka untuk umum (hanya diberi `robots: noindex`). Jangan
-deploy ke publik sebelum diberi proteksi: middleware + login, atau basic auth di level platform.
+### Login admin
+
+`/admin` tidak lagi terbuka untuk umum: semua halaman di bawahnya butuh sesi, dan yang belum masuk
+dialihkan ke `/admin/login` (halaman form password, `robots: noindex`).
+
+| Lapisan | Berkas | Peran |
+| ------- | ------ | ----- |
+| Proxy | `proxy.ts` | jalur cepat: `/admin/*` tanpa sesi → redirect ke `/admin/login?next=…`; `POST`/`DELETE /api/qris` → `401`. `GET /api/qris` tetap publik karena checkout butuh URL foto. |
+| Layout | `app/admin/(dasbor)/layout.tsx` + `lib/admin-guard.ts` | pemeriksaan otoritatif tiap request (`requireAdmin()`) — tetap berlaku walau proxy dilewati. Karena membaca cookie, layout ini memakai `export const instant = false`. |
+| API | `app/api/qris/route.ts` | aksi tulis (unggah/ganti/hapus foto) wajib sesi |
+| Login/logout | `app/api/admin/login` · `app/api/admin/logout` | verifikasi password (timing-safe) → cookie `vcr_admin` httpOnly, SameSite=Lax, 8 jam, `Secure` di https; keluar = cookie dihapus |
+
+Sesi adalah cookie bertanda tangan HMAC-SHA256 (`lib/admin-session.ts`, memakai Web Crypto supaya
+aman dipakai dari proxy maupun route handler) yang hanya berisi masa berlaku — tidak ada database
+sesi. Konsekuensinya, sadar dan disengaja:
+
+- Satu password bersama (`ADMIN_PASSWORD`) untuk semua operator — belum ada identitas per user.
+- Mengganti `ADMIN_SESSION_SECRET` langsung membatalkan semua sesi yang beredar.
+- Kalau `ADMIN_PASSWORD`/`ADMIN_SESSION_SECRET` kosong, sistem **gagal-tertutup**: login membalas
+  `not-configured` dan tidak ada sesi yang diterima.
+- Pembatasan percobaan login (10 per 5 menit) bersifat best-effort di memori proses; di serverless
+  hanya berlaku per instance.
+
+Halaman dashboard dipindah ke route group `app/admin/(dasbor)/` supaya `/admin/login` bisa memakai
+layout font yang sama tanpa ikut terkunci.
 
 ## Integrasi Supabase (foto QRIS)
 
@@ -124,8 +147,10 @@ dari `/admin/pengaturan` tanpa menyentuh kode — dan foto lama otomatis terhapu
    - `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` — dari
      **Project Settings → API**: pakai key **publishable** (atau key **anon / public** lama).
      Jangan pernah memakai **secret / service_role** — key itu melewati RLS.
-   - `ADMIN_PIN` — PIN untuk mengganti/menghapus foto di halaman admin.
-3. Restart `npm run dev`.
+   - `ADMIN_PASSWORD` — password untuk masuk ke `/admin`.
+   - `ADMIN_SESSION_SECRET` — kunci tanda tangan cookie sesi admin. Buat acak:
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+3. Restart `npm run dev`, lalu masuk lewat `/admin/login`.
 
 Tanpa env di langkah 2, semua endpoint membalas `not-configured` dan situs tetap memakai QR
 placeholder seperti sebelumnya (tidak ada error di UI).
@@ -134,9 +159,9 @@ placeholder seperti sebelumnya (tidak ada error di UI).
 
 | Bagian | Peran |
 | ------ | ----- |
-| `app/api/qris/route.ts` | `GET` = foto aktif; `POST` = unggah pengganti; `DELETE` = hapus. Aksi tulis dicek `ADMIN_PIN` di server (perbandingan timing-safe), tidak pernah dikirim ke browser. |
+| `app/api/qris/route.ts` | `GET` = foto aktif (publik, dipakai checkout); `POST` = unggah pengganti; `DELETE` = hapus. Aksi tulis hanya untuk sesi admin yang sah, jadi tidak bisa dipanggil dari luar. |
 | `lib/qris.ts` | helper client `fetchQris()` — hanya menerima URL publik. |
-| `components/admin/PengaturanView.tsx` | UI admin: preview, ganti, hapus foto (dengan PIN). |
+| `components/admin/PengaturanView.tsx` | UI admin: preview, ganti, hapus foto (di balik login). |
 | `components/home/HomeView.tsx` | kotak **Scan QRIS** di langkah bayar memakai foto dari Storage; kalau belum ada foto, tetap `QrSvg` placeholder. |
 
 **Anti-numpuk:** setiap unggahan memakai nama file `qris-<timestamp>.<ext>` (URL selalu baru,
@@ -145,16 +170,17 @@ foto QRIS. Upload dulu → hapus lama, supaya tidak ada jeda tanpa QRIS. Kalau p
 foto baru tetap aktif dan sisa file dibersihkan otomatis di unggahan berikutnya (UI memberi
 peringatan).
 
-**Batasan keamanan (penting):** kebijakan storage mengizinkan role `anon` mengunggah/hapus di
-dalam bucket `qris`, dan upload admin memakai anon key lewat server dengan penguncian PIN.
-Ini cukup untuk demo/prototype, **bukan** keamanan produksi — untuk produksi tambahkan Supabase
-Auth untuk admin (upload lewat session token) atau proteksi di level platform. Lihat juga catatan
-auth di bagian Admin dashboard.
+**Batasan keamanan (penting):** lewat aplikasi, aksi tulis sudah wajib sesi admin. Tapi kebijakan
+storage masih mengizinkan role `anon` menulis di bucket `qris` — artinya siapa pun yang memegang
+publishable key bisa menulis langsung ke Storage dan melewati login. Ini cukup untuk
+demo/prototype, **bukan** keamanan produksi; untuk produksi pindahkan upload ke Supabase Auth
+(policy `to authenticated`) atau kerjakan upload di server dengan key `service_role`.
 
 ### Verifikasi manual setelah setup
 
-1. `/admin/pengaturan` → kartu Koneksi menampilkan **Terhubung** + `qris · publik`.
-2. Masukkan PIN, pilih gambar PNG/JPG/WebP (≤5 MB), klik **Unggah & ganti** → muncul pesan sukses;
+1. Buka `/admin` tanpa login → harus dialihkan ke `/admin/login`; masukkan `ADMIN_PASSWORD`.
+2. `/admin/pengaturan` → kartu Koneksi menampilkan **Terhubung** + `qris · publik`.
+3. Pilih gambar PNG/JPG/WebP (≤5 MB), klik **Unggah & ganti** → muncul pesan sukses;
    cek isi bucket di Supabase → hanya tersisa 1 file.
 3. Buka `/` → pilih produk → **Bayar Sekarang** dengan metode QRIS → kotak scan menampilkan foto
    yang baru diunggah (bukan placeholder).

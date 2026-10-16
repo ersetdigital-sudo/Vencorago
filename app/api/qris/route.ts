@@ -1,14 +1,15 @@
 import { connection } from "next/server";
-import { timingSafeEqual } from "node:crypto";
+import { cookies } from "next/headers";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { ADMIN_COOKIE, verifySessionToken } from "@/lib/admin-session";
 
 /* Foto QRIS tunggal di Supabase Storage (bucket `qris`).
-   - GET     : URL foto aktif (baru) — dipakai checkout & halaman admin.
+   - GET     : URL foto aktif — publik, dipakai checkout & halaman admin.
    - POST    : ganti foto. Nama file membawa timestamp sehingga URL selalu baru
                (aman dari cache CDN), lalu SEMUA file lain dihapus — jadi foto
                lama otomatis hilang dan hanya satu QRIS yang tersimpan.
    - DELETE  : hapus foto (checkout kembali ke QR placeholder).
-   Aksi tulis dijaga PIN admin (ADMIN_PIN) yang hanya dibaca di server. */
+   Aksi tulis hanya untuk sesi admin yang sah (cookie dari /api/admin/login). */
 
 const BUCKET = "qris";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -18,13 +19,13 @@ const EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
-type Env = { url: string; key: string; pin: string | null };
+type Env = { url: string; key: string };
 
 function envNow(): Env | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!url || !key) return null;
-  return { url, key, pin: process.env.ADMIN_PIN?.trim() || null };
+  return { url, key };
 }
 
 const json = (body: unknown, status = 200) =>
@@ -41,21 +42,11 @@ function pubUrl(env: Env, name: string) {
   return `${env.url}/storage/v1/object/public/${BUCKET}/${name}`;
 }
 
-/** Perbandingan PIN tahan timing (nilai PIN tidak boleh bocor lewat waktu balas). */
-function pinOk(got: string, want: string) {
-  const a = Buffer.from(got, "utf8");
-  const b = Buffer.from(want, "utf8");
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 const bucketMissing = (msg: string) => /bucket not found/i.test(msg);
 
-/** Kunci akses tulis: env lengkap + PIN cocok. null = boleh lanjut. */
-function guard(req: Request, env: Env | null): Response | null {
-  if (!env) return fail("not-configured", 503);
-  if (!env.pin) return fail("no-pin", 503);
-  if (!pinOk(req.headers.get("x-admin-pin") ?? "", env.pin)) return fail("bad-pin", 401);
-  return null;
+/** Sesi admin dari cookie (ditandatangani, diverifikasi tanpa akses database). */
+async function adminAuthed() {
+  return verifySessionToken((await cookies()).get(ADMIN_COOKIE)?.value);
 }
 
 export async function GET() {
@@ -82,8 +73,8 @@ export async function GET() {
 export async function POST(req: Request) {
   await connection();
   const env = envNow();
-  const denied = guard(req, env);
-  if (denied || !env) return denied ?? fail("not-configured", 503);
+  if (!env) return fail("not-configured", 503);
+  if (!(await adminAuthed())) return fail("unauthorized", 401);
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
@@ -114,11 +105,11 @@ export async function POST(req: Request) {
   return json({ ok: true, url: pubUrl(env, name), cleanup });
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(_req: Request) {
   await connection();
   const env = envNow();
-  const denied = guard(req, env);
-  if (denied || !env) return denied ?? fail("not-configured", 503);
+  if (!env) return fail("not-configured", 503);
+  if (!(await adminAuthed())) return fail("unauthorized", 401);
 
   const bucket = storage(env).storage.from(BUCKET);
   const { data: old, error } = await bucket.list("");

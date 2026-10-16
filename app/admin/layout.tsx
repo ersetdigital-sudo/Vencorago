@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Outfit } from "next/font/google";
-import AdminShell from "@/components/admin/AdminShell";
 
 /* Typography comes from the admin style package: Outfit for the UI,
    JetBrains Mono for data, identifiers and tabular figures. */
@@ -12,10 +11,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/* Shell dashboard + gerbang sesi tinggal di grup rute (dasbor), supaya
+   /admin/login bisa memakai layout ini tanpa ikut terkunci. */
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
-  return (
-    <div className={`${outfit.variable} ${mono.variable}`}>
-      <AdminShell>{children}</AdminShell>
-    </div>
-  );
+  return <div className={`${outfit.variable} ${mono.variable}`}>{children}</div>;
 }

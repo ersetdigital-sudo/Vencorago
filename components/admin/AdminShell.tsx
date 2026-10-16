@@ -29,6 +29,12 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const current = NAV.find((n) => isActive(n.href, pathname)) ?? NAV[0];
   const needAttention = tx.filter((t) => stat(t) === "pending").length;
 
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.replace("/admin/login");
+    router.refresh();
+  }
+
   return (
     <div className={`${s.admin} ${collapsed ? s.collapsed : ""}`}>
       <div className={s.shell}>
@@ -144,6 +150,15 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               <span className={s.accountName}>Admin</span>
               <Icon n="external" />
             </Link>
+
+            <button
+              className={s.iconBtn}
+              onClick={logout}
+              title="Keluar dari admin"
+              aria-label="Keluar dari admin"
+            >
+              <Icon n="logout" />
+            </button>
           </header>
 
           <main className={s.canvas}>{children}</main>
