@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import s from "./admin.module.css";
-import { Badge, Card, Empty, Icon, Pager } from "./ui";
+import { Badge, Card, Empty, Icon, InputUang, Pager } from "./ui";
 import { rp, rpShort } from "./data";
 import { downloadCsv, groupBy, toCsv } from "./metrics";
 import { useTx } from "./useTx";
@@ -687,28 +687,26 @@ function PanelProduk({
               </Baris>
 
               <Baris label="Nominal">
-                <input
+                <InputUang
                   className={`${s.field} ${s.cellNum}`}
-                  type="number"
                   value={draft.value}
-                  onChange={(e) => setDraft({ ...draft, value: Number(e.target.value) })}
+                  onChange={(v) => setDraft({ ...draft, value: v })}
                 />
                 <span className={s.cellHint}>
                   {kat?.kind === "tagihan"
-                    ? "Jumlah tagihannya; harga jual diisi 0."
-                    : "Nominal yang dipilih pelanggan."}
+                    ? "Jumlah tagihannya dalam rupiah; harga jual diisi 0."
+                    : "Nominal rupiah yang dipilih pelanggan."}
                 </span>
               </Baris>
 
               <Baris label="Harga jual">
-                <input
+                <InputUang
                   className={`${s.field} ${s.cellNum}`}
-                  type="number"
                   value={draft.price}
-                  onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
+                  onChange={(v) => setDraft({ ...draft, price: v })}
                 />
                 <span className={s.cellHint}>
-                  Angka yang dibayar pelanggan, belum termasuk biaya admin.
+                  Rupiah yang dibayar pelanggan, belum termasuk biaya admin.
                 </span>
               </Baris>
 

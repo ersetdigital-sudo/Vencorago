@@ -354,3 +354,46 @@ export function TableSkeleton({ rows = 6, cols = 6 }: { rows?: number; cols?: nu
     </div>
   );
 }
+
+/* ----------------------------------------------------------- input uang -- */
+
+/** Angka → "25.500"; 0 sengaja dikosongkan supaya placeholder-nya kelihatan. */
+const ribuan = (n: number) => (n ? Math.round(n).toLocaleString("id-ID") : "");
+
+/** Teks yang diketik apa adanya → angka: "Rp 25.500" jadi 25500. */
+const angkaDariTeks = (teks: string) => {
+  const digit = teks.replace(/\D/g, "").slice(0, 15);
+  return digit ? Number(digit) : 0;
+};
+
+/**
+ * Input uang: yang tampil di layar sudah berformat ribuan ("25.500") sementara
+ * nilai yang dikirim ke pemanggil tetap angka (25500), jadi tidak ada titik
+ * yang perlu dihitung atau dihapus sendiri oleh operator.
+ */
+export function InputUang({
+  value,
+  onChange,
+  className,
+  disabled,
+  placeholder = "0",
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  className?: string;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      className={className}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      disabled={disabled}
+      placeholder={placeholder}
+      value={ribuan(value)}
+      onChange={(e) => onChange(angkaDariTeks(e.target.value))}
+    />
+  );
+}
