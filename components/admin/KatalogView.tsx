@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import s from "./admin.module.css";
 import { Badge, Card, Empty, Icon } from "./ui";
+import type { DataKatalog, Entitas, Item, Kat, Metode, Penyedia, Setelan } from "./katalog";
 
 /* Editor katalog.
 
@@ -15,70 +16,6 @@ import { Badge, Card, Empty, Icon } from "./ui";
 
    Setiap perubahan lewat /api/catalog (server, sesi admin) dan cache halaman
    publik di-revalidate, jadi harga baru langsung terpakai tanpa deploy ulang. */
-
-type Kat = {
-  slug: string;
-  name: string;
-  icon: string;
-  description: string;
-  tile_note: string;
-  kind: string;
-  number_label: string;
-  number_ph: string;
-  number_min: number;
-  number_max: number;
-  provider_label: string;
-  item_label: string;
-  bill: Record<string, string> | null;
-  bill_sample: number | null;
-  sort: number;
-  active: boolean;
-};
-
-type Penyedia = { id: number; category_slug: string; name: string; sort: number; active: boolean };
-
-type Item = {
-  id: number;
-  provider_id: number;
-  name: string;
-  note: string;
-  value: number;
-  price: number;
-  featured: boolean;
-  card_label: string;
-  sort: number;
-  active: boolean;
-};
-
-type Metode = {
-  code: string;
-  name: string;
-  note: string;
-  kind: string;
-  fee: number;
-  prefix: string;
-  icon: string;
-  sort: number;
-  active: boolean;
-};
-
-type Setelan = { key: string; value: unknown };
-
-type DataKatalog = {
-  ok: boolean;
-  code?: string;
-  detail?: string;
-  cats: Kat[];
-  providers: Penyedia[];
-  items: Item[];
-  methods: Metode[];
-  settings: Setelan[];
-  icons: string[];
-  kinds: string[];
-  methodKinds: string[];
-};
-
-type Entitas = "category" | "provider" | "item" | "method" | "setting";
 
 const rp = (n: number) => "Rp " + Math.round(n).toLocaleString("id-ID");
 
