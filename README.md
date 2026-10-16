@@ -26,6 +26,52 @@ npm start
 `original/` berisi HTML asli (tidak diubah) untuk pembanding. Folder `fonts/` di root dipakai oleh
 file-file asli itu; salinan yang dipakai aplikasi Next ada di `public/fonts/`.
 
+## SEO & GEO
+
+Domain kanonisnya **`https://www.vencorago.com`**, ditulis sekali di `SITE_URL` (`lib/seo.tsx`).
+Semua URL absolut — canonical, Open Graph, JSON-LD, sitemap — dibangun dari konstanta itu, jadi
+pindah domain (atau pindah dari `*.vercel.app`) cukup mengubah satu baris.
+
+| Berkas | Isi |
+| ------ | --- |
+| `lib/seo.tsx` | `SITE_URL`/`SITE_NAME`, `pageMetadata()` (title + description + canonical + OG/Twitter), dan pembuat JSON-LD (`organizationLd`, `websiteLd`, `breadcrumbLd`, `faqLd`, `howToLd`, `serviceLd`, `layananLd`) |
+| `app/robots.ts` | `/robots.txt`: semua halaman publik dibuka, `/admin` dan `/api` ditutup, crawler AI (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, dll.) dicantumkan eksplisit |
+| `app/sitemap.ts` | `/sitemap.xml`: 5 halaman tetap + **satu URL per kategori** (`/produk?k=…`) dari katalog |
+| `app/llms.txt/route.ts` | `/llms.txt`: ringkasan situs untuk agen AI, termasuk tarif biaya yang dibaca dari katalog |
+| `app/opengraph-image.tsx` · `app/twitter-image.tsx` | kartu 1200×630 (gambar dibuat `lib/og-image.tsx`, hurufnya dari `public/fonts`) |
+| `lib/bantuan.ts` | daftar tanya-jawab Pusat Bantuan — dipakai halaman **dan** FAQPage JSON-LD, dengan angka biaya dari katalog |
+
+**Canonical di halaman ber-query.** Satu kategori bisa dibuka dengan `op`/`h` apa saja, jadi
+canonical-nya dipangkas ke bentuk yang layak diindeks: `/produk?k=Pulsa&op=…&h=…` → `/produk?k=Pulsa`,
+`/cara-bayar?m=VA` → `/cara-bayar`, dan `/status?inv=…` → `/status` (invoice per pelanggan tidak untuk
+diindeks). `/produk` tanpa parameter canonical-nya ke kategori default, jadi halaman itu **tidak**
+dimasukkan ke sitemap.
+
+**JSON-LD per halaman.** `Organization` + `WebSite` ikut di semua halaman dari root layout;
+`BreadcrumbList` ada di semua halaman publik; `/produk?k=…` menambah `Service` + `OfferCatalog`
+berisi harga yang sedang berlaku, **hanya untuk penyedia yang benar-benar dirender grid** (struktur
+data harus sama dengan yang terlihat pengunjung); `/bantuan` menambah `FAQPage` dari 14 tanya-jawab
+yang tampil di halaman; beranda menambah `ItemList` daftar layanan. Kategori tagihan sengaja tidak
+diberi `Offer` karena harga produknya nol — yang dibayar adalah tagihannya.
+
+**Description tidak ada yang kembar.** Description beranda dan tiap halaman tetap ditulis manual;
+description kategori dihitung `kategoriDescription()` dari katalog (penyedia + harga termurah yang
+sedang berlaku), jadi ikut berubah saat harga diubah dari `/admin/produk`.
+
+### Yang masih perlu dilakukan di luar kode
+
+1. **Arahkan domain.** Di Vercel, jadikan `www.vencorago.com` domain utama dan redirect apex
+   `vencorago.com` → `www` (kalau keduanya melayani isi yang sama tanpa redirect, Google melihat
+   dua situs kembar).
+2. **Daftarkan ke Google Search Console** dan kirim `https://www.vencorago.com/sitemap.xml`;
+   tambahkan token verifikasinya ke `metadata.verification` di `app/layout.tsx`.
+3. **Isi data kontak asli.** `Organization` JSON-LD sengaja belum memuat telepon/alamat karena data
+   di situs masih contoh (`6281234567890`, alamat, dan Instagram dari versi asli) — kirim data
+   aslinya sebelum dimasukkan ke schema, jangan sebaliknya.
+4. **`HowTo` untuk `/cara-bayar` belum dibuat.** Langkahnya masih teks di dalam komponen client,
+   jadi perlu dipindah ke modul data dulu (seperti `lib/bantuan.ts`). Google sudah menonaktifkan
+   rich result HowTo, jadi ini prioritas rendah.
+
 ## Struktur
 
 ```
