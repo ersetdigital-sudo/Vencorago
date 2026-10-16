@@ -13,7 +13,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Ship every change
 
 - **Commit and push every completed change right away.** No separate "should I push?" — the push is part of finishing a task, not a follow-up question.
-- Order: verify the change first (typecheck, build, and a browser check through the interface the user actually uses), then `git add` only the files you touched, commit, push to `origin main`.
+- Order: verify the change first (typecheck, build, and a browser check through the interface the user actually uses), then `git add` only the files you touched, commit, and push to `origin/main`.
 - Commit messages: short imperative sentence that says why the change exists, plus the Codebuff footer. Keep the working tree clean — do not leave finished work uncommitted.
 - Do not commit or push when a check fails, when a change is still half-done, or when the user asked for work to stay local; say so in the reply instead.
 
